@@ -1,32 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <radialGradient id="ballGlow" cx="35%" cy="35%" r="65%">
+    <linearGradient id="shieldGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="40%" stop-color="#facc15"/>
+      <stop offset="80%" stop-color="#ca8a04"/>
+      <stop offset="100%" stop-color="#713f12"/>
+    </linearGradient>
+    <linearGradient id="shieldBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#064e3b"/>
+    </linearGradient>
+    <radialGradient id="ballSphere" cx="35%" cy="30%" r="65%">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="70%" stop-color="#e2e8f0"/>
+      <stop offset="65%" stop-color="#e2e8f0"/>
       <stop offset="100%" stop-color="#64748b"/>
     </radialGradient>
-    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#070a12" stop-opacity="0"/>
-    </radialGradient>
   </defs>
-  <!-- Background Glow -->
-  <circle cx="50" cy="50" r="48" fill="#0b1329" stroke="#00f0ff" stroke-width="2"/>
-  <circle cx="50" cy="50" r="45" fill="url(#bgGlow)"/>
-  
-  <!-- Goal Net Wireframe -->
-  <path d="M 20 20 L 80 20 L 72 45 L 28 45 Z" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,2" opacity="0.6"/>
-  <path d="M 20 20 L 28 45 L 28 75 L 20 80 Z" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.6"/>
-  <path d="M 80 20 L 72 45 L 72 75 L 80 80 Z" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.6"/>
-  
-  <!-- Soccer Ball -->
-  <circle cx="50" cy="56" r="24" fill="url(#ballGlow)" stroke="#334155" stroke-width="1.5"/>
+
+  <!-- Outer Shield -->
+  <path d="M 60 6 L 106 22 C 106 66 94 96 60 114 C 26 96 14 66 14 22 Z" fill="url(#shieldGold)" stroke="#ffffff" stroke-width="2"/>
+  <path d="M 60 12 L 99 26 C 99 63 88 90 60 106 C 32 90 21 63 21 26 Z" fill="url(#shieldBg)" stroke="#eab308" stroke-width="1.5"/>
+
+  <!-- Crosshair Ring -->
+  <circle cx="60" cy="60" r="32" fill="none" stroke="#00f0ff" stroke-width="2" stroke-dasharray="6,4" opacity="0.8"/>
+
+  <!-- 3D Soccer Ball -->
+  <circle cx="60" cy="60" r="24" fill="url(#ballSphere)" stroke="#0f172a" stroke-width="2"/>
   <!-- Center Pentagon -->
-  <polygon points="50,46 59,53 56,64 44,64 41,53" fill="#0f172a"/>
-  <!-- Outer patches -->
-  <polygon points="50,32 54,38 46,38" fill="#0f172a"/>
-  <polygon points="69,45 66,51 72,55" fill="#0f172a"/>
-  <polygon points="63,72 65,65 72,66" fill="#0f172a"/>
-  <polygon points="37,72 35,65 28,66" fill="#0f172a"/>
-  <polygon points="31,45 34,51 28,55" fill="#0f172a"/>
+  <polygon points="60,48 71,56 67,69 53,69 49,56" fill="#0f172a"/>
+  <!-- Seam Lines -->
+  <line x1="60" y1="48" x2="60" y2="36" stroke="#334155" stroke-width="1.8"/>
+  <line x1="71" y1="56" x2="83" y2="52" stroke="#334155" stroke-width="1.8"/>
+  <line x1="67" y1="69" x2="75" y2="79" stroke="#334155" stroke-width="1.8"/>
+  <line x1="53" y1="69" x2="45" y2="79" stroke="#334155" stroke-width="1.8"/>
+  <line x1="49" y1="56" x2="37" y2="52" stroke="#334155" stroke-width="1.8"/>
+  <!-- Outer Patches -->
+  <polygon points="60,36 66,41 54,41" fill="#0f172a"/>
+  <polygon points="83,52 77,58 81,66" fill="#0f172a"/>
+  <polygon points="74,80 71,72 79,70" fill="#0f172a"/>
+  <polygon points="46,80 49,72 41,70" fill="#0f172a"/>
+  <polygon points="37,52 43,58 39,66" fill="#0f172a"/>
+
+  <!-- Top Championship Star -->
+  <polygon points="60,15 63,21 70,22 65,26 66,32 60,29 54,32 55,26 50,22 57,21" fill="#facc15"/>
 </svg>

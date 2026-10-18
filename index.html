@@ -69,6 +69,7 @@
          ===================================================================== -->
     <div id="screen-menu" class="screen-overlay">
       <div class="game-title-group">
+        <div id="hero-crest-slot" class="hero-crest-container"></div>
         <div class="game-title-badge">★ ARCADE SOCCER TYPING ★</div>
         <h1 class="game-title">STRIKER CHALLENGE</h1>
         <p class="game-subtitle">Top Bins • Speed Touch Typing • Championship Glory</p>
@@ -103,7 +104,7 @@
         <!-- Mode 1: Shooting Practice (Fully Implemented) -->
         <div id="btn-mode-shooting" class="mode-card">
           <div class="mode-card-badge badge-active">✔ AVAILABLE NOW</div>
-          <div class="mode-card-icon">🎯</div>
+          <div id="icon-mode-shooting" class="mode-card-icon">🎯</div>
           <h3 class="mode-card-title">SHOOTING PRACTICE</h3>
           <p class="mode-card-desc">
             Test your speed and precision in a 10-shot shootout! Type target words placed on different parts of the goal during the striker's approach run.
@@ -118,7 +119,7 @@
         <!-- Mode 2: Full Soccer Game (Under Construction) -->
         <div id="btn-mode-fullgame" class="mode-card under-construction">
           <div class="mode-card-badge badge-wip">🚧 UNDER CONSTRUCTION</div>
-          <div class="mode-card-icon">⚽</div>
+          <div id="icon-mode-fullgame" class="mode-card-icon">⚽</div>
           <h3 class="mode-card-title">FULL 11v11 MATCH</h3>
           <p class="mode-card-desc">
             Full pitch soccer game with passing combinations, sliding defensive tackles, fast breaks, and counter-attacks.
@@ -148,7 +149,7 @@
       <div class="diff-cards-grid">
         <!-- Rookie -->
         <div class="diff-card" data-difficulty="rookie">
-          <div class="diff-icon">🥉</div>
+          <div id="icon-diff-rookie" class="diff-icon">🥉</div>
           <h3 class="diff-title">ROOKIE</h3>
           <div class="diff-specs">
             <b>3 – 4 Letters</b><br>
@@ -160,7 +161,7 @@
 
         <!-- Semi-Pro -->
         <div class="diff-card" data-difficulty="semiPro">
-          <div class="diff-icon">🥈</div>
+          <div id="icon-diff-semipro" class="diff-icon">🥈</div>
           <h3 class="diff-title">SEMI-PRO</h3>
           <div class="diff-specs">
             <b>4 – 7 Letters</b><br>
@@ -172,7 +173,7 @@
 
         <!-- Pro Striker -->
         <div class="diff-card" data-difficulty="pro">
-          <div class="diff-icon">🥇</div>
+          <div id="icon-diff-pro" class="diff-icon">🥇</div>
           <h3 class="diff-title">PRO STRIKER</h3>
           <div class="diff-specs">
             <b>6 – 9 Letters</b><br>
@@ -184,7 +185,7 @@
 
         <!-- World Class -->
         <div class="diff-card" data-difficulty="worldClass">
-          <div class="diff-icon">💎</div>
+          <div id="icon-diff-world" class="diff-icon">💎</div>
           <h3 class="diff-title">WORLD CLASS</h3>
           <div class="diff-specs">
             <b>7 – 13 Letters</b><br>
@@ -351,6 +352,7 @@
 
           <div class="tactical-board">
             <h4>📋 TACTICAL PLAYBOOK IN DEVELOPMENT:</h4>
+            <div id="tactical-pitch-diagram" class="tactical-pitch-svg-wrap"></div>
             <ul>
               <li><b>Midfield Passing Chains</b>: Teammates make runs into space. Type their designated word before an opponent defender closes them down to complete the pass.</li>
               <li><b>Through Balls & Crosses</b>: High-speed typing combos trigger curving crosses into the penalty box.</li>

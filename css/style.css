@@ -87,7 +87,20 @@ body {
 
 /* Header & Arcade Title */
 .game-title-group {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-crest-container {
+  margin-bottom: 10px;
+  animation: crest-float 3.2s ease-in-out infinite;
+}
+
+@keyframes crest-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
 }
 
 .game-title-badge {
@@ -685,16 +698,38 @@ body {
 
 .trophy-card.unlocked {
   border-color: var(--accent-gold);
-  background: rgba(255, 235, 59, 0.05);
+  background: linear-gradient(135deg, rgba(255, 235, 59, 0.1) 0%, rgba(15, 23, 42, 0.85) 100%);
+  box-shadow: 0 4px 18px rgba(250, 204, 21, 0.15);
 }
 
 .trophy-card.locked {
-  opacity: 0.6;
+  opacity: 0.55;
+}
+
+.trophy-card.locked .trophy-icon {
+  filter: grayscale(0.85) brightness(0.75);
+}
+
+.trophy-card.unlocked .trophy-icon {
+  filter: drop-shadow(0 2px 8px rgba(250, 204, 21, 0.45));
 }
 
 .trophy-icon {
   font-size: 2.2rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pill-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.pill-icon svg {
+  width: 26px;
+  height: 26px;
 }
 
 .trophy-title {
@@ -741,6 +776,14 @@ body {
   margin: 16px 0;
   text-align: left;
   box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+}
+
+.tactical-pitch-svg-wrap {
+  margin: 10px 0 14px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
 .tactical-board h4 {

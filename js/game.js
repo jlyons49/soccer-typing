@@ -4,6 +4,7 @@ import { sound } from './audio.js';
 import { DIFFICULTIES, GOAL_ZONES, generateRoundTargets } from './words.js';
 import { scoreManager, TROPHIES } from './scores.js';
 import { StadiumRenderer } from './renderer.js';
+import { SVG_ASSETS } from './icons.js';
 
 class SoccerTypingGame {
   constructor() {
@@ -109,11 +110,32 @@ class SoccerTypingGame {
     this.renderer.resize();
     window.addEventListener('resize', () => this.renderer.resize());
 
+    this.injectCustomArtAssets();
     this.bindDOMEvents();
     this.bindKeyboardEvents();
 
     // Start main game loop
     requestAnimationFrame((ts) => this.gameLoop(ts));
+  }
+
+  injectCustomArtAssets() {
+    const map = {
+      'hero-crest-slot': SVG_ASSETS.heroCrest,
+      'icon-mode-shooting': SVG_ASSETS.modeShooting,
+      'icon-mode-fullgame': SVG_ASSETS.modeFullGame,
+      'icon-diff-rookie': SVG_ASSETS.diffRookie,
+      'icon-diff-semipro': SVG_ASSETS.diffSemiPro,
+      'icon-diff-pro': SVG_ASSETS.diffPro,
+      'icon-diff-world': SVG_ASSETS.diffWorldClass,
+      'tactical-pitch-diagram': SVG_ASSETS.tacticalChalkboardPitch
+    };
+
+    Object.entries(map).forEach(([id, svgHtml]) => {
+      const el = document.getElementById(id);
+      if (el && svgHtml) {
+        el.innerHTML = svgHtml;
+      }
+    });
   }
 
   bindDOMEvents() {
@@ -272,10 +294,11 @@ class SoccerTypingGame {
     trophies.forEach(t => {
       const isUnlocked = scoreManager.isTrophyUnlocked(t.id);
       const unlockInfo = scoreManager.getTrophyUnlockInfo(t.id);
+      const customSvg = (SVG_ASSETS.trophies && SVG_ASSETS.trophies[t.id]) ? SVG_ASSETS.trophies[t.id] : t.icon;
 
       html += `
         <div class="trophy-card ${isUnlocked ? 'unlocked' : 'locked'}">
-          <div class="trophy-icon">${t.icon}</div>
+          <div class="trophy-icon">${customSvg}</div>
           <div class="trophy-info">
             <h4 class="trophy-title">${t.title}</h4>
             <p class="trophy-desc">${t.subtitle}</p>
@@ -331,6 +354,9 @@ class SoccerTypingGame {
         this.correctChars++;
         sound.playKeypress(1.0);
 
+        const coords = this.renderer.getTargetScreenCoords(matchIndex, this.targets);
+        this.renderer.spawnTargetKeySpark(coords.x, coords.y, '#00f0ff');
+
         // Check if 1-letter word (unlikely, but safe)
         if (target.typedIndex >= target.word.length) {
           this.executeShot(target);
@@ -350,6 +376,9 @@ class SoccerTypingGame {
         this.correctChars++;
         const pitchMod = 1.0 + (target.typedIndex / target.word.length) * 0.4;
         sound.playKeypress(pitchMod);
+
+        const coords = this.renderer.getTargetScreenCoords(this.activeTargetIndex, this.targets);
+        this.renderer.spawnTargetKeySpark(coords.x, coords.y, '#39ff14');
 
         // Word completed!
         if (target.typedIndex >= target.word.length) {
@@ -534,25 +563,26 @@ class SoccerTypingGame {
       this.score += roundPoints;
 
       // Visual & Audio effects
+      this.netBulge = 1.0;
       sound.playGoal();
-      this.renderer.triggerNetRipple(1.2);
+      this.renderer.triggerNetRipple(1.35, this.ball.x, this.ball.y);
       this.renderer.triggerScreenShake(14);
       this.renderer.spawnConfetti(90);
 
       // Floating text popups
       this.renderer.addFloatingText(`+${roundPoints} PTS!`, this.ball.x, this.ball.y - 20, '#00ff66', 32);
       if (target.zone.isCorner) {
-        this.renderer.addFloatingText('🎯 ' + target.zone.badge, this.ball.x, this.ball.y - 60, '#ff0055', 24);
+        this.renderer.addFloatingText('★ ' + target.zone.badge.replace(' 🎯', ''), this.ball.x, this.ball.y - 60, '#ff0055', 24);
       }
       if (this.streak >= 3) {
         this.renderer.addFloatingText(`🔥 ${this.streak}x STREAK BONUS!`, 600, 320, '#ff9900', 28);
       }
 
       this.banner = {
-        title: 'GOOOAAAL! ⚽',
+        title: 'GOOOAAAL!',
         subtitle: target.zone.isCorner ? `Unstoppable strike into the ${target.zone.shortName}!` : 'Power strike past the keeper!',
         color: '#00ff66',
-        bg: 'rgba(0, 35, 15, 0.90)'
+        bg: 'rgba(0, 35, 15, 0.92)'
       };
 
       this.keeper.diveState = 'DEFEATED';
@@ -561,12 +591,13 @@ class SoccerTypingGame {
       this.streak = 0;
       sound.playSave();
       this.renderer.triggerScreenShake(6);
+      this.renderer.spawnShockwave(this.ball.x, this.ball.y, '#facc15', 65);
 
       this.banner = {
-        title: 'SAVED! 🧤',
-        subtitle: 'The goalkeeper made a brilliant stop!',
+        title: 'SAVED BY KEEPER!',
+        subtitle: 'The goalkeeper made a brilliant diving stop!',
         color: '#facc15',
-        bg: 'rgba(30, 20, 0, 0.90)'
+        bg: 'rgba(30, 20, 0, 0.92)'
       };
     }
 
@@ -651,11 +682,12 @@ class SoccerTypingGame {
 
     // Newly unlocked trophies display
     if (result.newlyUnlocked && result.newlyUnlocked.length > 0) {
-      let trophyHtml = '<h4 style="color: #ffeb3b; margin-bottom: 8px;">🏆 NEW TROPHIES UNLOCKED!</h4><div class="new-trophies-row">';
+      let trophyHtml = '<h4 style="color: #ffeb3b; margin-bottom: 8px;">★ NEW TROPHIES UNLOCKED! ★</h4><div class="new-trophies-row">';
       result.newlyUnlocked.forEach(t => {
+        const customSvg = (SVG_ASSETS.trophies && SVG_ASSETS.trophies[t.id]) ? SVG_ASSETS.trophies[t.id] : t.icon;
         trophyHtml += `
           <div class="new-trophy-pill">
-            <span class="pill-icon">${t.icon}</span>
+            <span class="pill-icon">${customSvg}</span>
             <span class="pill-title">${t.title}</span>
           </div>
         `;
