@@ -255,6 +255,16 @@ export class StadiumRenderer {
       if (gameState.phase === 'TYPING' || gameState.phase === 'KICKING') {
         this.drawDribbleWordPlate(gameState);
       }
+    } else if (gameState.mode === 'touchPractice' && (gameState.state === 'PLAYING' || gameState.state === 'SUMMARY' || gameState.phase === 'FAILED')) {
+      // Touch Practice Rapid Alternating Footwork View
+      this.drawPitch();
+      this.drawTouchPracticeArena(gameState);
+      this.updateAndDrawBallTrail(gameState);
+      this.drawTouchStriker(gameState.striker, gameState.touchState);
+      this.drawBall(gameState.ball);
+      if (gameState.phase === 'TYPING' || gameState.phase === 'KICKING' || gameState.phase === 'FAILED' || gameState.phase === 'FINISH') {
+        this.drawTouchPracticePlate(gameState);
+      }
     } else {
       // 3. Draw Lush 2.5D Pitch (Grass stripes, radial lines, chalk lines, corner flags)
       this.drawPitch();
@@ -2045,6 +2055,408 @@ export class StadiumRenderer {
       this.ctx.fillStyle = isError ? '#fecdd3' : (isTyped ? '#39ff14' : (isNextChar ? '#ffeb3b' : '#ffffff'));
       this.ctx.fillText(char, kx + keyTileWidth / 2, ky + kh / 2 + 1);
     }
+
+  // =========================================================================
+  // TOUCH PRACTICE ARENA & CHARACTER SPRITE
+  // =========================================================================
+  drawTouchPracticeArena(gameState) {
+    const cx = 600;
+    const cy = 565;
+
+    this.ctx.save();
+
+    // 1. Agility Ring on Pitch
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    this.ctx.lineWidth = 2.5;
+    this.ctx.setLineDash([8, 8]);
+    this.ctx.beginPath();
+    this.ctx.ellipse(cx, cy, 85, 38, 0, 0, Math.PI * 2);
+    this.ctx.stroke();
+    this.ctx.setLineDash([]);
+
+    // Inner subtle glow disc
+    const ringGrad = this.ctx.createRadialGradient(cx, cy, 10, cx, cy, 85);
+    ringGrad.addColorStop(0, 'rgba(0, 240, 255, 0.08)');
+    ringGrad.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
+    this.ctx.fillStyle = ringGrad;
+    this.ctx.beginPath();
+    this.ctx.ellipse(cx, cy, 85, 38, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // 2. Training cones marking out the agility box
+    const cones = [
+      { x: 480, y: 515, color: '#f97316' },
+      { x: 720, y: 515, color: '#f97316' },
+      { x: 460, y: 615, color: '#ea580c' },
+      { x: 740, y: 615, color: '#ea580c' },
+    ];
+
+    cones.forEach(c => {
+      this.ctx.save();
+      this.ctx.translate(c.x, c.y);
+
+      // Shadow
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      this.ctx.beginPath();
+      this.ctx.ellipse(0, 4, 12, 5, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Cone Base
+      this.ctx.fillStyle = '#ea580c';
+      this.ctx.beginPath();
+      this.ctx.moveTo(-11, 3);
+      this.ctx.lineTo(0, 7);
+      this.ctx.lineTo(11, 3);
+      this.ctx.lineTo(0, -1);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      // Cone Body
+      this.ctx.fillStyle = c.color;
+      this.ctx.beginPath();
+      this.ctx.moveTo(-8, 3);
+      this.ctx.lineTo(-2, -14);
+      this.ctx.lineTo(2, -14);
+      this.ctx.lineTo(8, 3);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      // White reflective collar
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.beginPath();
+      this.ctx.moveTo(-5, -3);
+      this.ctx.lineTo(-3, -9);
+      this.ctx.lineTo(3, -9);
+      this.ctx.lineTo(5, -3);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      this.ctx.restore();
+    });
+
+    this.ctx.restore();
+  }
+
+  drawTouchStriker(striker, touchState) {
+    const sx = striker ? striker.x : 600;
+    const sy = striker ? striker.y : 530;
+    const tState = touchState || { currentFoot: 'LEFT', kickAnim: 0 };
+    const currentFoot = tState.currentFoot || 'LEFT';
+    const lastKickedFoot = tState.lastKickedFoot || null;
+    const kickAnim = tState.kickAnim || 0;
+
+    this.ctx.save();
+    this.ctx.translate(sx, sy);
+
+    const idleBob = Math.sin(this.tick * 0.16) * 2;
+
+    // Ground Shadow
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
+    this.ctx.beginPath();
+    this.ctx.ellipse(0, 46, 28, 8, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Helper for articulated leg + sock + cleat
+    const drawStrikerLeg = (hipX, hipY, kneeX, kneeY, footX, footY) => {
+      // Thigh
+      this.ctx.strokeStyle = '#eab676';
+      this.ctx.lineWidth = 10;
+      this.ctx.lineCap = 'round';
+      this.ctx.beginPath();
+      this.ctx.moveTo(hipX, hipY);
+      this.ctx.lineTo(kneeX, kneeY);
+      this.ctx.stroke();
+
+      // Royal Blue & White Hooped Sock
+      this.ctx.strokeStyle = '#1d4ed8';
+      this.ctx.lineWidth = 9;
+      this.ctx.beginPath();
+      this.ctx.moveTo(kneeX, kneeY);
+      this.ctx.lineTo(footX, footY);
+      this.ctx.stroke();
+
+      // White sock turnover cuff
+      this.ctx.strokeStyle = '#ffffff';
+      this.ctx.lineWidth = 3;
+      this.ctx.beginPath();
+      this.ctx.moveTo(kneeX - 3, kneeY + 3);
+      this.ctx.lineTo(kneeX + 3, kneeY + 3);
+      this.ctx.stroke();
+
+      // Crimson & Gold Predator Cleat
+      this.ctx.fillStyle = '#dc2626';
+      this.ctx.strokeStyle = '#facc15';
+      this.ctx.lineWidth = 1.2;
+      this.ctx.beginPath();
+      this.ctx.roundRect(footX - 6, footY - 3, 15, 7, 3);
+      this.ctx.fill();
+      this.ctx.stroke();
+    };
+
+    if (kickAnim > 0 && lastKickedFoot === 'LEFT') {
+      // Left foot swinging across inward to tap ball to the right foot
+      const p = kickAnim;
+      drawStrikerLeg(8, 22, 10, 34, 12, 46); // Plant right leg
+      drawStrikerLeg(-8, 22, -3 + (1 - p) * 6, 32 - Math.sin(p * Math.PI) * 5, 6 * (1 - p) - 10 * p, 44 - Math.sin(p * Math.PI) * 12); // Kicking left leg
+
+      // Motion Arc
+      this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+      this.ctx.lineWidth = 4;
+      this.ctx.beginPath();
+      this.ctx.arc(-4, 30, 22, 0.4, 1.8);
+      this.ctx.stroke();
+    } else if (kickAnim > 0 && lastKickedFoot === 'RIGHT') {
+      // Right foot swinging across inward to tap ball to the left foot
+      const p = kickAnim;
+      drawStrikerLeg(-8, 22, -10, 34, -12, 46); // Plant left leg
+      drawStrikerLeg(8, 22, 3 - (1 - p) * 6, 32 - Math.sin(p * Math.PI) * 5, -6 * (1 - p) + 10 * p, 44 - Math.sin(p * Math.PI) * 12); // Kicking right leg
+
+      // Motion Arc
+      this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+      this.ctx.lineWidth = 4;
+      this.ctx.beginPath();
+      this.ctx.arc(4, 30, 22, 1.3, 2.7);
+      this.ctx.stroke();
+    } else {
+      // Idle Ready Stance (Alternating poised foot)
+      if (currentFoot === 'LEFT') {
+        drawStrikerLeg(8, 22, 10, 34, 12, 46); // Right plant
+        drawStrikerLeg(-8, 22, -11, 33, -15, 43 + idleBob); // Left poised forward
+      } else {
+        drawStrikerLeg(-8, 22, -10, 34, -12, 46); // Left plant
+        drawStrikerLeg(8, 22, 11, 33, 15, 43 + idleBob); // Right poised forward
+      }
+    }
+
+    // Striker Shorts
+    this.ctx.fillStyle = '#f8fafc';
+    this.ctx.strokeStyle = '#cbd5e1';
+    this.ctx.lineWidth = 1.2;
+    this.ctx.beginPath();
+    this.ctx.roundRect(-16, 12, 32, 16, 4);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // Shorts side stripe
+    this.ctx.fillStyle = '#2563eb';
+    this.ctx.fillRect(-16, 13, 3, 14);
+    this.ctx.fillRect(13, 13, 3, 14);
+
+    // Striker Arms (balanced outward for rapid footwork)
+    this.ctx.strokeStyle = '#eab676';
+    this.ctx.lineWidth = 7;
+    this.ctx.lineCap = 'round';
+    // Left arm
+    this.ctx.beginPath();
+    this.ctx.moveTo(-16, -12);
+    this.ctx.lineTo(-28, 4 + idleBob * 0.5);
+    this.ctx.stroke();
+    // Right arm
+    this.ctx.beginPath();
+    this.ctx.moveTo(16, -12);
+    this.ctx.lineTo(28, 4 - idleBob * 0.5);
+    this.ctx.stroke();
+
+    // Striker Jersey (Royal Blue Gradient with Gold Trim & #9 Print)
+    const kitGrad = this.ctx.createLinearGradient(-18, -22, 18, 16);
+    kitGrad.addColorStop(0, '#3b82f6');
+    kitGrad.addColorStop(0.5, '#2563eb');
+    kitGrad.addColorStop(1, '#1d4ed8');
+    this.ctx.fillStyle = kitGrad;
+    this.ctx.strokeStyle = '#1e3a8a';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.beginPath();
+    this.ctx.roundRect(-17, -20, 34, 35, 6);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // Gold Collar & Shoulder Stripes
+    this.ctx.fillStyle = '#facc15';
+    this.ctx.fillRect(-9, -20, 18, 3.5);
+    this.ctx.fillRect(-17, -18, 6, 3);
+    this.ctx.fillRect(11, -18, 6, 3);
+
+    // Back Nameplate & Squad Number "9"
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.font = 'bold 6.5px sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('STRIKER', 0, -11);
+
+    this.ctx.fillStyle = '#facc15';
+    this.ctx.font = '900 17px "Impact", sans-serif';
+    this.ctx.fillText('9', 0, 3);
+
+    // Head & Hair
+    this.ctx.fillStyle = '#eab676';
+    this.ctx.beginPath();
+    this.ctx.arc(0, -31, 11, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Stylized Fade Haircut
+    this.ctx.fillStyle = '#1c1917';
+    this.ctx.beginPath();
+    this.ctx.arc(0, -33, 11.2, Math.PI * 0.85, Math.PI * 2.15);
+    this.ctx.closePath();
+    this.ctx.fill();
+
+    this.ctx.restore();
+  }
+
+  drawTouchPracticePlate(gameState) {
+    const tState = gameState.touchState;
+    if (!tState) return;
+
+    const letter = (tState.targetLetter || 'A').toUpperCase();
+    const currentFoot = tState.currentFoot || 'LEFT';
+    const isError = tState.mistypeFlash > 0.05;
+    const isSuddenDeath = !!tState.suddenDeath;
+    const isFailed = !!tState.failed;
+
+    // Horizontal shake when mistyped
+    const shakeX = isError ? Math.sin(this.tick * 1.4) * 12 * tState.mistypeFlash : 0;
+
+    this.ctx.save();
+    this.ctx.translate(this.width * 0.5 + shakeX, this.height * 0.38);
+
+    // Main HUD Container Box
+    const boxW = 440;
+    const boxH = 175;
+    const boxY = -70;
+
+    this.ctx.shadowColor = isError ? '#ff0055' : (isSuddenDeath ? '#f59e0b' : '#00f0ff');
+    this.ctx.shadowBlur = isError ? 26 : 20;
+    this.ctx.fillStyle = isError ? 'rgba(55, 8, 22, 0.96)' : 'rgba(6, 20, 42, 0.94)';
+    this.ctx.strokeStyle = isError ? '#ff0055' : (isSuddenDeath ? '#f59e0b' : '#00f0ff');
+    this.ctx.lineWidth = 2.8;
+
+    this.ctx.beginPath();
+    this.ctx.roundRect(-boxW / 2, boxY, boxW, boxH, 16);
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.shadowBlur = 0;
+
+    // Top Header Pill
+    const pillW = 340;
+    const pillH = 26;
+    const pillY = boxY - 14;
+
+    this.ctx.fillStyle = isError
+      ? 'rgba(255, 0, 85, 0.95)'
+      : (isSuddenDeath ? 'rgba(245, 158, 11, 0.95)' : 'rgba(0, 240, 255, 0.95)');
+    this.ctx.beginPath();
+    this.ctx.roundRect(-pillW / 2, pillY, pillW, pillH, 13);
+    this.ctx.fill();
+
+    this.ctx.font = 'bold 12px "Segoe UI", sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillStyle = isError ? '#ffffff' : (isSuddenDeath ? '#0f172a' : '#041324');
+
+    if (isFailed) {
+      this.ctx.fillText('💀 SUDDEN DEATH: 1 MISS ELIMINATION! 💀', 0, pillY + pillH / 2);
+    } else if (isError) {
+      this.ctx.fillText('⚠ MISTYPE! TYPE SHOWN LETTER TO TOUCH ⚠', 0, pillY + pillH / 2);
+    } else if (isSuddenDeath) {
+      this.ctx.fillText('💀 WORLD CLASS • 1 MISS FAILS ROUND (SUDDEN DEATH)', 0, pillY + pillH / 2);
+    } else {
+      this.ctx.fillText('⚡ 60s TOUCH PRACTICE • ALTERNATING FEET', 0, pillY + pillH / 2);
+    }
+
+    // Left Column: Touches Count
+    this.ctx.textAlign = 'center';
+    this.ctx.fillStyle = '#94a3b8';
+    this.ctx.font = 'bold 11px "Segoe UI", sans-serif';
+    this.ctx.fillText('TOUCHES', -145, boxY + 44);
+
+    this.ctx.fillStyle = '#facc15';
+    this.ctx.font = '900 36px "Impact", "Segoe UI", sans-serif';
+    this.ctx.fillText(`${tState.touches || 0}`, -145, boxY + 76);
+
+    // Right Column: Consecutive Streak
+    this.ctx.fillStyle = '#94a3b8';
+    this.ctx.font = 'bold 11px "Segoe UI", sans-serif';
+    this.ctx.fillText('STREAK', 145, boxY + 44);
+
+    this.ctx.fillStyle = '#00ff66';
+    this.ctx.font = '900 36px "Impact", "Segoe UI", sans-serif';
+    this.ctx.fillText(`${gameState.streak || 0}`, 145, boxY + 76);
+
+    // Center Mechanical Keycap Tile
+    const keyTileW = 86;
+    const keyTileH = 80;
+    const keyTileX = -keyTileW / 2;
+    const keyTileY = boxY + 22;
+
+    this.ctx.fillStyle = isError ? 'rgba(255, 0, 85, 0.28)' : 'rgba(15, 23, 42, 0.95)';
+    this.ctx.strokeStyle = isError ? '#ff0055' : (isSuddenDeath ? '#facc15' : '#00f0ff');
+    this.ctx.lineWidth = 2.5;
+
+    this.ctx.beginPath();
+    this.ctx.roundRect(keyTileX, keyTileY, keyTileW, keyTileH, 12);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    // 3D Keycap bevel top highlight
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.beginPath();
+    this.ctx.roundRect(keyTileX + 3, keyTileY + 3, keyTileW - 6, keyTileH - 8, 8);
+    this.ctx.stroke();
+
+    // Keycap Target Letter
+    this.ctx.font = '900 48px "Consolas", "Courier New", monospace';
+    this.ctx.fillStyle = isError ? '#fecdd3' : '#ffffff';
+    this.ctx.fillText(letter, 0, keyTileY + keyTileH / 2 + 1);
+
+    // Row Category Hint
+    const homeRow = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
+    const topRow = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
+    let rowHint = 'BOTTOM ROW REACH';
+    if (homeRow.includes(letter)) rowHint = 'HOME ROW ANCHOR';
+    else if (topRow.includes(letter)) rowHint = 'TOP ROW KEY';
+
+    this.ctx.font = 'bold 9.5px "Segoe UI", sans-serif';
+    this.ctx.fillStyle = isSuddenDeath ? '#facc15' : '#38bdf8';
+    this.ctx.fillText(rowHint, 0, keyTileY + keyTileH + 11);
+
+    // Bottom Active Foot Indicator Badges
+    const footPillW = 150;
+    const footPillH = 28;
+    const footPillY = boxY + boxH - 36;
+
+    // Left Foot Badge
+    const isLeft = currentFoot === 'LEFT';
+    this.ctx.save();
+    this.ctx.translate(-100, footPillY);
+    this.ctx.fillStyle = isLeft ? 'rgba(0, 255, 102, 0.25)' : 'rgba(30, 41, 59, 0.6)';
+    this.ctx.strokeStyle = isLeft ? '#00ff66' : 'rgba(148, 163, 184, 0.3)';
+    this.ctx.lineWidth = isLeft ? 2.2 : 1.2;
+    this.ctx.beginPath();
+    this.ctx.roundRect(-footPillW / 2, -footPillH / 2, footPillW, footPillH, 8);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    this.ctx.font = `bold ${isLeft ? '12px' : '11px'} "Segoe UI", sans-serif`;
+    this.ctx.fillStyle = isLeft ? '#39ff14' : '#64748b';
+    this.ctx.fillText(isLeft ? '👟 LEFT FOOT ◀' : '👟 LEFT FOOT', 0, 1);
+    this.ctx.restore();
+
+    // Right Foot Badge
+    const isRight = currentFoot === 'RIGHT';
+    this.ctx.save();
+    this.ctx.translate(100, footPillY);
+    this.ctx.fillStyle = isRight ? 'rgba(0, 255, 102, 0.25)' : 'rgba(30, 41, 59, 0.6)';
+    this.ctx.strokeStyle = isRight ? '#00ff66' : 'rgba(148, 163, 184, 0.3)';
+    this.ctx.lineWidth = isRight ? 2.2 : 1.2;
+    this.ctx.beginPath();
+    this.ctx.roundRect(-footPillW / 2, -footPillH / 2, footPillW, footPillH, 8);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    this.ctx.font = `bold ${isRight ? '12px' : '11px'} "Segoe UI", sans-serif`;
+    this.ctx.fillStyle = isRight ? '#39ff14' : '#64748b';
+    this.ctx.fillText(isRight ? '▶ RIGHT FOOT 👟' : 'RIGHT FOOT 👟', 0, 1);
+    this.ctx.restore();
 
     this.ctx.restore();
   }

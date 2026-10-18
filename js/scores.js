@@ -54,6 +54,22 @@ export const TROPHIES = [
     check: (_, lastMatch) => lastMatch?.mode === 'dribblingDrill' && (lastMatch?.elapsedTime || 999) < 25.0,
   },
   {
+    id: 'touch_centurion',
+    title: 'Touch Centurion',
+    subtitle: 'Score 75+ touches in 60s Touch Practice',
+    icon: '⚡',
+    category: 'speed',
+    check: (_, lastMatch) => lastMatch?.mode === 'touchPractice' && (lastMatch?.touches || 0) >= 75,
+  },
+  {
+    id: 'touch_flawless_pro',
+    title: 'World Class Juggler',
+    subtitle: 'Reach 40+ touches in World Class Touch Practice without missing',
+    icon: '💎',
+    category: 'accuracy',
+    check: (_, lastMatch) => lastMatch?.mode === 'touchPractice' && lastMatch?.difficulty === 'worldClass' && (lastMatch?.touches || 0) >= 40 && !lastMatch?.failed,
+  },
+  {
     id: 'corner_specialist',
     title: 'Top Bins Sniper',
     subtitle: 'Score 5+ corner goals in one shootout',
@@ -102,8 +118,9 @@ export const TROPHIES = [
     check: (scores) => {
       const sp = scores.shootingPractice || {};
       const dd = scores.dribblingDrill || {};
+      const tp = scores.touchPractice || {};
       const tiers = ['rookie', 'amateur', 'semiPro', 'pro', 'worldClass'];
-      return tiers.every(t => (sp[t]?.highScore > 0) || (dd[t]?.bestTime > 0));
+      return tiers.every(t => (sp[t]?.highScore > 0) || (dd[t]?.bestTime > 0) || (tp[t]?.highScore > 0));
     }
   }
 ];
@@ -138,7 +155,7 @@ class ScoreManager {
       if (raw) {
         const parsed = JSON.parse(raw);
         // Ensure all modes & 5 difficulties exist
-        ['shootingPractice', 'dribblingDrill', 'fullSoccerGame'].forEach(mode => {
+        ['shootingPractice', 'dribblingDrill', 'touchPractice', 'fullSoccerGame'].forEach(mode => {
           if (!parsed[mode]) parsed[mode] = this.createDefaultModeRecords();
           DIFFICULTY_KEYS.forEach(diff => {
             if (!parsed[mode][diff]) {
@@ -162,9 +179,10 @@ class ScoreManager {
     }
 
     return {
-      version: 2,
+      version: 3,
       shootingPractice: this.createDefaultModeRecords(),
       dribblingDrill: this.createDefaultModeRecords(),
+      touchPractice: this.createDefaultModeRecords(),
       fullSoccerGame: this.createDefaultModeRecords(),
       unlockedTrophies: {},
       totalGoalsAllTime: 0,
@@ -208,6 +226,14 @@ class ScoreManager {
       if (elapsed > 0 && (!record.bestTime || elapsed < record.bestTime)) {
         isNewHighScore = true;
         record.bestTime = elapsed;
+        record.date = new Date().toLocaleDateString();
+      }
+    } else if (mode === 'touchPractice') {
+      const touches = matchStats.touches !== undefined ? matchStats.touches : matchStats.score;
+      previousHighScore = record.highScore;
+      isNewHighScore = touches > (record.highScore || 0);
+      if (isNewHighScore) {
+        record.highScore = touches;
         record.date = new Date().toLocaleDateString();
       }
     } else {

@@ -16,6 +16,10 @@ export const DIFFICULTIES = {
     dribbleTouches: 10, // 10 touches to cross the field
     dribbleMinLen: 2,
     dribbleMaxLen: 3,
+    touchDuration: 60.0,
+    touchKeys: ['A', 'S', 'D', 'F', 'J', 'K', 'L'], // Pure Home Row Anchor Keys
+    touchLetterDesc: 'Home Row Anchors (A, S, D, F, J, K, L)',
+    touchSuddenDeath: false,
     pointsMultiplier: 1.0,
     keeperReaction: 0.38,
   },
@@ -33,6 +37,10 @@ export const DIFFICULTIES = {
     dribbleTouches: 12,
     dribbleMinLen: 3,
     dribbleMaxLen: 5,
+    touchDuration: 60.0,
+    touchKeys: ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'E', 'I', 'R', 'U'], // Home row + frequent top keys
+    touchLetterDesc: 'Full Home Row + Core Vowels',
+    touchSuddenDeath: false,
     pointsMultiplier: 1.4,
     keeperReaction: 0.52,
   },
@@ -50,6 +58,10 @@ export const DIFFICULTIES = {
     dribbleTouches: 14,
     dribbleMinLen: 5,
     dribbleMaxLen: 7,
+    touchDuration: 60.0,
+    touchKeys: ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'], // Home + Top row
+    touchLetterDesc: 'Home Row + Top Row (A–L, Q–P)',
+    touchSuddenDeath: false,
     pointsMultiplier: 2.0,
     keeperReaction: 0.66,
   },
@@ -67,6 +79,10 @@ export const DIFFICULTIES = {
     dribbleTouches: 16,
     dribbleMinLen: 7,
     dribbleMaxLen: 10,
+    touchDuration: 60.0,
+    touchKeys: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''), // Full 3 rows
+    touchLetterDesc: 'Full Alphabet (Home, Top & Bottom Rows)',
+    touchSuddenDeath: false,
     pointsMultiplier: 3.0,
     keeperReaction: 0.80,
   },
@@ -84,6 +100,14 @@ export const DIFFICULTIES = {
     dribbleTouches: 18,
     dribbleMinLen: 10,
     dribbleMaxLen: 15,
+    touchDuration: 60.0,
+    // Weighted with distant pinky/stretch keys + full alphabet
+    touchKeys: [
+      ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+      'Q', 'Z', 'X', 'P', 'B', 'V', 'Y', 'W', 'C', 'M'
+    ],
+    touchLetterDesc: 'Full Alphabet • 💀 1 Miss Fails Round!',
+    touchSuddenDeath: true, // In top difficulty, a single miss fails the entire round!
     pointsMultiplier: 4.5,
     keeperReaction: 0.94,
   }
@@ -1181,3 +1205,12 @@ export function generateRoundTargets(difficultyConfig, zonesList = GOAL_ZONES) {
 
   return chosenTargets;
 }
+
+// Generate a single letter for Touch Practice mode based on difficulty tier
+export function generateTouchLetter(difficultyConfig, excludeLetter = '') {
+  const pool = difficultyConfig.touchKeys || ['A', 'S', 'D', 'F', 'J', 'K', 'L'];
+  const candidates = pool.filter(l => l !== excludeLetter);
+  if (candidates.length === 0) return pool[0] || 'A';
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+

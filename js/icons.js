@@ -118,6 +118,32 @@ export const SVG_ASSETS = {
     </svg>
   `,
 
+  modeTouch: `
+    <svg viewBox="0 0 80 80" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="touchGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#00f0ff" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <!-- Turf Base -->
+      <ellipse cx="40" cy="62" rx="34" ry="12" fill="#15803d" stroke="#4ade80" stroke-width="1.5"/>
+      <circle cx="40" cy="40" r="28" fill="url(#touchGlow)"/>
+      <!-- Left Cleat (Cyan) -->
+      <path d="M 12 50 L 26 44 L 28 54 L 14 58 Z" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5"/>
+      <!-- Right Cleat (Orange) -->
+      <path d="M 68 50 L 54 44 L 52 54 L 66 58 Z" fill="#ea580c" stroke="#fb923c" stroke-width="1.5"/>
+      <!-- Motion Arrows between feet -->
+      <path d="M 28 48 Q 40 38 52 48" fill="none" stroke="#ffeb3b" stroke-width="2" stroke-dasharray="3,2"/>
+      <!-- Center Juggled Soccer Ball -->
+      <circle cx="40" cy="42" r="11" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <polygon points="40,36 44,39 42.5,44 37.5,44 36,39" fill="#0f172a"/>
+      <!-- 60s Timer Badge -->
+      <rect x="25" y="10" width="30" height="14" rx="4" fill="#0f172a" stroke="#00f0ff" stroke-width="1.5"/>
+      <text x="40" y="21" font-family="monospace" font-size="10" font-weight="900" fill="#00ff66" text-anchor="middle">60s</text>
+    </svg>
+  `,
+
   modeFullGame: `
     <svg viewBox="0 0 80 80" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
       <!-- Pitch -->
@@ -410,6 +436,23 @@ export const SVG_ASSETS = {
         <line x1="32" y1="35" x2="32" y2="22" stroke="#00ff66" stroke-width="2.5" stroke-linecap="round"/>
         <line x1="32" y1="35" x2="43" y2="39" stroke="#ff0055" stroke-width="2.5" stroke-linecap="round"/>
         <circle cx="32" cy="35" r="3" fill="#ffffff"/>
+      </svg>
+    `,
+    touch_centurion: `
+      <svg viewBox="0 0 64 64" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
+        <!-- Rapid Touch Mastery Centurion Trophy -->
+        <ellipse cx="32" cy="52" rx="22" ry="6" fill="#0f172a" stroke="#00f0ff" stroke-width="1.5"/>
+        <path d="M 16 22 L 32 10 L 48 22 L 44 46 L 20 46 Z" fill="url(#silverGrad)" stroke="#00f0ff" stroke-width="2"/>
+        <text x="32" y="34" font-family="Impact, sans-serif" font-size="16" fill="#facc15" text-anchor="middle">75+</text>
+        <circle cx="32" cy="46" r="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+      </svg>
+    `,
+    touch_flawless_pro: `
+      <svg viewBox="0 0 64 64" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
+        <!-- World Class Sudden Death Flawless Shield -->
+        <path d="M 32 6 L 54 16 C 54 38 46 50 32 58 C 18 50 10 38 10 16 Z" fill="url(#diamondGrad)" stroke="#fef08a" stroke-width="2"/>
+        <polygon points="32,18 36,26 45,27 38,33 40,42 32,37 24,42 26,33 19,27 28,26" fill="#ffeb3b"/>
+        <circle cx="32" cy="47" r="4" fill="#00ff66"/>
       </svg>
     `
   },

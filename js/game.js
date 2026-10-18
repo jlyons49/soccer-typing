@@ -1,7 +1,7 @@
 // Main Game State Machine and Controller for Soccer Typing
 
 import { sound } from './audio.js';
-import { DIFFICULTIES, GOAL_ZONES, generateRoundTargets, generateDribbleWord } from './words.js';
+import { DIFFICULTIES, GOAL_ZONES, generateRoundTargets, generateDribbleWord, generateTouchLetter } from './words.js';
 import { scoreManager, TROPHIES } from './scores.js';
 import { StadiumRenderer } from './renderer.js';
 import { SVG_ASSETS } from './icons.js';
@@ -12,7 +12,7 @@ class SoccerTypingGame {
     this.renderer = new StadiumRenderer(this.canvas);
 
     // Game Config & State
-    this.mode = 'shootingPractice'; // 'shootingPractice', 'dribblingDrill', or 'fullSoccerGame'
+    this.mode = 'shootingPractice'; // 'shootingPractice', 'dribblingDrill', 'touchPractice', or 'fullSoccerGame'
     this.difficultyKey = 'semiPro';
     this.difficulty = DIFFICULTIES.semiPro;
 
@@ -24,6 +24,10 @@ class SoccerTypingGame {
     this.cornerGoals = 0;
     this.streak = 0;
     this.bestStreak = 0;
+
+    // Mode-specific drill states
+    this.dribbleState = null;
+    this.touchState = null;
 
     // Typing & Round Simulation Data
     this.phase = 'IDLE'; // 'APPROACH', 'TYPING', 'KICKING', 'BALL_FLIGHT', 'CELEBRATION'
@@ -156,6 +160,7 @@ class SoccerTypingGame {
       'hero-crest-slot': SVG_ASSETS.heroCrest,
       'icon-mode-shooting': SVG_ASSETS.modeShooting,
       'icon-mode-dribbling': SVG_ASSETS.modeDribbling,
+      'icon-mode-touch': SVG_ASSETS.modeTouch,
       'icon-mode-fullgame': SVG_ASSETS.modeFullGame,
       'icon-diff-rookie': SVG_ASSETS.diffRookie,
       'icon-diff-amateur': SVG_ASSETS.diffAmateur,
@@ -208,6 +213,16 @@ class SoccerTypingGame {
       btnDribbling.addEventListener('click', () => {
         sound.playKeypress(1.25);
         this.mode = 'dribblingDrill';
+        this.updateDifficultyHighScores();
+        this.showScreen('screen-difficulty');
+      });
+    }
+
+    const btnTouch = document.getElementById('btn-mode-touch');
+    if (btnTouch) {
+      btnTouch.addEventListener('click', () => {
+        sound.playKeypress(1.3);
+        this.mode = 'touchPractice';
         this.updateDifficultyHighScores();
         this.showScreen('screen-difficulty');
       });
@@ -365,10 +380,16 @@ class SoccerTypingGame {
 
   updateDifficultyHighScores() {
     const isDribble = this.mode === 'dribblingDrill';
+    const isTouch = this.mode === 'touchPractice';
+
     if (this.dom.diffScreenSubtitle) {
-      this.dom.diffScreenSubtitle.textContent = isDribble
-        ? 'Dribbling Drill • Scales word length & total ball touches to cross the 100m field'
-        : 'Shooting Practice • Scales word length, lead-up approach time, and score multiplier';
+      if (isTouch) {
+        this.dom.diffScreenSubtitle.textContent = 'Touch Practice • 60s drill tapping the ball with alternating feet (Home-key scaling)';
+      } else if (isDribble) {
+        this.dom.diffScreenSubtitle.textContent = 'Dribbling Drill • Scales word length & total ball touches to cross the 100m field';
+      } else {
+        this.dom.diffScreenSubtitle.textContent = 'Shooting Practice • Scales word length, lead-up approach time, and score multiplier';
+      }
     }
 
     const tierConfigs = [
@@ -384,7 +405,13 @@ class SoccerTypingGame {
       const rec = scoreManager.getRecord(this.mode, key);
 
       if (specsEl && diff) {
-        if (isDribble) {
+        if (isTouch) {
+          specsEl.innerHTML = `
+            <b>${diff.touchLetterDesc}</b><br>
+            ${diff.touchDuration.toFixed(0)}s Speed Drill<br>
+            ${diff.touchSuddenDeath ? '<span style="color:#ff0055; font-weight:800;">⚠ 1 Miss Fails Round!</span>' : 'Alternating Feet'}
+          `;
+        } else if (isDribble) {
           specsEl.innerHTML = `
             <b>${diff.dribbleMinLen} – ${diff.dribbleMaxLen} Letters</b><br>
             ${diff.dribbleTouches} Touches (100m)<br>
@@ -400,7 +427,9 @@ class SoccerTypingGame {
       }
 
       if (scoreEl) {
-        if (isDribble) {
+        if (isTouch) {
+          scoreEl.textContent = (rec.highScore || 0) > 0 ? `Record: ${rec.highScore} touches` : 'Record: --';
+        } else if (isDribble) {
           scoreEl.textContent = rec.bestTime ? `Best Time: ${rec.bestTime.toFixed(2)}s` : 'Best Time: --';
         } else {
           scoreEl.textContent = `Record: ${(rec.highScore || 0).toLocaleString()} pts`;
@@ -416,7 +445,7 @@ class SoccerTypingGame {
     this.dom.trophyTotalGoals.textContent = records.totalGoalsAllTime || 0;
     this.dom.trophyTotalMatches.textContent = records.matchesPlayed || 0;
 
-    // Populate Personal Bests Table across all 5 Difficulties for both modes
+    // Populate Personal Bests Table across all 5 Difficulties for all modes
     if (this.dom.trophyRecordsTableWrap) {
       const tiers = [
         { key: 'rookie', label: 'Rookie' },
@@ -448,6 +477,13 @@ class SoccerTypingGame {
               ${tiers.map(t => {
                 const r = scoreManager.getRecord('dribblingDrill', t.key);
                 return `<td>${r.bestTime ? `<b style="color:#00ff66;">${r.bestTime.toFixed(2)}s</b>` : '<span style="color:#64748b;">--</span>'}</td>`;
+              }).join('')}
+            </tr>
+            <tr>
+              <td style="color: #facc15;">⚡ Touch Practice (60s)</td>
+              ${tiers.map(t => {
+                const r = scoreManager.getRecord('touchPractice', t.key);
+                return `<td>${(r.highScore || 0) > 0 ? `<b style="color:#facc15;">${r.highScore} touches</b>` : '<span style="color:#64748b;">--</span>'}</td>`;
               }).join('')}
             </tr>
           </tbody>
@@ -509,6 +545,13 @@ class SoccerTypingGame {
 
   handleCharInput(char) {
     this.totalTypedChars++;
+
+    // Branch for Touch Practice mode
+    if (this.mode === 'touchPractice') {
+      this.handleTouchCharInput(char);
+      this.updateHudMetrics();
+      return;
+    }
 
     // Branch for Dribbling Drill mode
     if (this.mode === 'dribblingDrill') {
@@ -603,6 +646,82 @@ class SoccerTypingGame {
     }
   }
 
+  handleTouchCharInput(char) {
+    const tState = this.touchState;
+    if (!tState) return;
+
+    if (char === tState.targetLetter) {
+      // Correct single letter typed!
+      this.correctChars++;
+      tState.touches++;
+      this.streak++;
+      if (this.streak > this.bestStreak) this.bestStreak = this.streak;
+
+      // Alternate foot
+      const kickedFoot = tState.currentFoot;
+      tState.currentFoot = kickedFoot === 'LEFT' ? 'RIGHT' : 'LEFT';
+      tState.lastKickedFoot = kickedFoot;
+      tState.kickAnim = 1.0;
+      tState.mistypeFlash = 0;
+
+      // Sounds & FX
+      const pitchMod = Math.min(1.8, 1.0 + (this.streak % 20) * 0.04);
+      sound.playKeypress(pitchMod);
+      sound.playKick();
+
+      const footX = kickedFoot === 'LEFT' ? 575 : 625;
+      this.renderer.spawnGrassKick(footX, 575, 10);
+      this.renderer.spawnTargetKeySpark(600, 310, '#39ff14');
+
+      if (tState.touches % 10 === 0) {
+        this.renderer.addFloatingText(`${tState.touches} TOUCHES!`, 600, 250, '#ffeb3b', 28);
+      }
+
+      // Next target letter
+      tState.targetLetter = generateTouchLetter(this.difficulty, tState.targetLetter);
+
+      // Update HUD
+      if (this.dom.hudScore) this.dom.hudScore.textContent = `${tState.touches}`;
+      if (this.dom.hudStreak) this.dom.hudStreak.textContent = `${this.streak}`;
+    } else {
+      // Mistype!
+      this.errorChars++;
+      this.streak = 0;
+      tState.mistypes++;
+      tState.mistypeFlash = 1.0;
+
+      sound.playTypo();
+      this.renderer.triggerScreenShake(7);
+
+      if (this.dom.hudGoals) this.dom.hudGoals.textContent = `${tState.mistypes}`;
+      if (this.dom.hudStreak) this.dom.hudStreak.textContent = '0';
+
+      // Check Sudden Death (World Class rule: 1 miss fails entire round)
+      if (tState.suddenDeath) {
+        this.handleTouchSuddenDeathFail();
+      }
+    }
+  }
+
+  handleTouchSuddenDeathFail() {
+    this.phase = 'FAILED';
+    if (this.touchState) this.touchState.failed = true;
+
+    sound.playWhistle(false);
+    this.renderer.triggerScreenShake(18);
+
+    this.banner = {
+      title: 'DRILL FAILED! 💀',
+      subtitle: `1 Miss Rule on World Class • Finished with ${this.touchState ? this.touchState.touches : 0} Touches`,
+      color: '#ff0055',
+      bg: 'rgba(55, 8, 22, 0.94)'
+    };
+
+    setTimeout(() => {
+      this.finishMatch();
+    }, 2200);
+  }
+
   handleBackspace() {
     if (this.mode === 'dribblingDrill') {
       if (this.dribbleState && this.dribbleState.typedIndex > 0) {
@@ -653,7 +772,9 @@ class SoccerTypingGame {
 
     this.showScreen('playing');
 
-    if (this.mode === 'dribblingDrill') {
+    if (this.mode === 'touchPractice') {
+      this.startTouchPractice();
+    } else if (this.mode === 'dribblingDrill') {
       this.startDribblingDrill();
     } else {
       if (this.dom.hudScoreLabel) this.dom.hudScoreLabel.textContent = 'Score';
@@ -661,6 +782,50 @@ class SoccerTypingGame {
       if (this.dom.leadUpTimerTitle) this.dom.leadUpTimerTitle.textContent = '🏃 STRIKER APPROACH RUN';
       this.setupShotRound();
     }
+  }
+
+  // =========================================================================
+  // TOUCH PRACTICE FLOW
+  // =========================================================================
+  startTouchPractice() {
+    const duration = this.difficulty.touchDuration || 60.0;
+    this.timeTotal = duration;
+    this.timeRemaining = duration;
+
+    this.touchState = {
+      touches: 0,
+      mistypes: 0,
+      currentFoot: 'LEFT',
+      lastKickedFoot: null,
+      kickAnim: 0,
+      mistypeFlash: 0,
+      targetLetter: generateTouchLetter(this.difficulty),
+      suddenDeath: !!this.difficulty.touchSuddenDeath,
+      failed: false
+    };
+
+    this.phase = 'TYPING';
+    this.banner = null;
+    this.isGoalScored = false;
+
+    // Striker at pitch center & Ball at initial left foot
+    this.striker = { x: 600, y: 530, kickFrame: 0 };
+    this.ball = { x: 575, y: 575, scale: 1.0, rotation: 0 };
+
+    // Configure HUD for Touch Practice
+    if (this.dom.hudScoreLabel) this.dom.hudScoreLabel.textContent = 'Touches';
+    this.dom.hudScore.textContent = '0';
+    this.dom.hudShotNumber.textContent = this.touchState.suddenDeath ? '💀 SUDDEN DEATH' : 'TOUCH DRILL';
+    if (this.dom.hudGoalsLabel) this.dom.hudGoalsLabel.textContent = 'Misses';
+    this.dom.hudGoals.textContent = '0';
+    this.dom.hudStreak.textContent = '0';
+    if (this.dom.leadUpTimerTitle) this.dom.leadUpTimerTitle.textContent = '⏱ 60-SECOND DRILL CLOCK';
+    this.dom.leadUpTimerBar.style.width = '100%';
+    this.dom.leadUpTimerBar.style.backgroundColor = this.touchState.suddenDeath ? '#f59e0b' : '#00f0ff';
+    this.dom.leadUpTimerText.textContent = `${duration.toFixed(1)}s`;
+
+    this.updateHudMetrics();
+    sound.playWhistle(true);
   }
 
   // =========================================================================
@@ -975,6 +1140,73 @@ class SoccerTypingGame {
     const finalWpm = Math.round((this.correctChars / 5) / elapsedMinutes);
     const finalAccuracy = this.totalTypedChars > 0 ? Math.round((this.correctChars / this.totalTypedChars) * 100) : 100;
 
+    if (this.mode === 'touchPractice' && this.touchState) {
+      const touches = this.touchState.touches;
+      const failed = this.touchState.failed;
+      const mistypes = this.touchState.mistypes;
+      const duration = this.difficulty.touchDuration || 60.0;
+      const activeElapsed = Math.min(duration, duration - Math.max(0, this.timeRemaining));
+      const touchRate = Math.round((touches / Math.max(1, activeElapsed)) * 60);
+
+      const matchStats = {
+        touches,
+        score: touches,
+        failed,
+        mistypes,
+        elapsedTime: activeElapsed,
+        wpm: finalWpm,
+        lpm: touchRate,
+        accuracy: finalAccuracy,
+        bestStreak: this.bestStreak
+      };
+
+      const result = scoreManager.recordMatch(this.mode, this.difficultyKey, matchStats);
+
+      if (this.dom.sumTitle) this.dom.sumTitle.textContent = failed ? 'DRILL FAILED (SUDDEN DEATH)' : 'TOUCH PRACTICE COMPLETE!';
+      if (this.dom.sumScoreLabel) this.dom.sumScoreLabel.textContent = 'Ball Touches Logged';
+      this.dom.sumFinalScore.textContent = `${touches}`;
+      if (this.dom.sumGoalsLabel) this.dom.sumGoalsLabel.textContent = 'Touch Speed (LPM)';
+      this.dom.sumGoals.textContent = `${touchRate} touches / min`;
+      this.dom.sumWpm.textContent = `${finalWpm} WPM`;
+      this.dom.sumAccuracy.textContent = `${finalAccuracy}%`;
+      if (this.dom.sumStreakLabel) this.dom.sumStreakLabel.textContent = 'Best Touch Streak:';
+      this.dom.sumStreak.textContent = `${this.bestStreak} In a Row`;
+
+      // Rating badge for Touch Practice
+      let rating = 'B';
+      let ratingColor = '#38bdf8';
+      if (failed) {
+        rating = 'FAIL';
+        ratingColor = '#ff0055';
+      } else if (touches >= 75 && finalAccuracy >= 95) {
+        rating = 'S+';
+        ratingColor = '#ff0055';
+      } else if (touches >= 60) {
+        rating = 'A';
+        ratingColor = '#00ff66';
+      } else if (touches >= 40) {
+        rating = 'B';
+        ratingColor = '#ffb703';
+      } else {
+        rating = 'C';
+        ratingColor = '#94a3b8';
+      }
+      this.dom.sumRatingBadge.textContent = rating;
+      this.dom.sumRatingBadge.style.color = ratingColor;
+      this.dom.sumRatingBadge.style.borderColor = ratingColor;
+
+      if (result.isNewHighScore && !failed) {
+        this.dom.sumHighScoreBadge.textContent = '★ NEW TOUCH RECORD! ★';
+        this.dom.sumHighScoreBadge.classList.remove('hidden');
+      } else {
+        this.dom.sumHighScoreBadge.classList.add('hidden');
+      }
+
+      this.renderNewlyUnlockedTrophies(result.newlyUnlocked);
+      this.showScreen('screen-summary');
+      return;
+    }
+
     if (this.mode === 'dribblingDrill' && this.dribbleState) {
       const elapsedTime = Number(this.dribbleState.elapsedTime.toFixed(2));
       const matchStats = {
@@ -1134,6 +1366,7 @@ class SoccerTypingGame {
       keeper: this.keeper,
       ball: this.ball,
       dribbleState: this.dribbleState,
+      touchState: this.touchState,
       isGoalScored: this.isGoalScored,
       netBulge: this.netBulge,
       banner: this.banner
@@ -1144,6 +1377,12 @@ class SoccerTypingGame {
 
   update(dt) {
     if (this.state !== 'PLAYING') return;
+
+    // Branch for Touch Practice update loop
+    if (this.mode === 'touchPractice') {
+      this.updateTouchPractice(dt);
+      return;
+    }
 
     // Branch for Dribbling Drill update loop
     if (this.mode === 'dribblingDrill') {
@@ -1256,6 +1495,64 @@ class SoccerTypingGame {
 
     this.striker.x = this.ball.x - 48;
     this.striker.y += (targetCone.y - this.striker.y) * Math.min(1, dt * 8.5);
+  }
+
+  updateTouchPractice(dt) {
+    const tState = this.touchState;
+    if (!tState) return;
+
+    // 1. Countdown timer in TYPING phase
+    if (this.phase === 'TYPING') {
+      this.timeRemaining -= dt;
+
+      const pct = Math.max(0, (this.timeRemaining / this.timeTotal) * 100);
+      this.dom.leadUpTimerBar.style.width = `${pct}%`;
+      this.dom.leadUpTimerText.textContent = `${Math.max(0, this.timeRemaining).toFixed(1)}s`;
+
+      if (this.timeRemaining < 10.0) {
+        this.dom.leadUpTimerBar.style.backgroundColor = '#ff0055';
+      }
+
+      if (this.timeRemaining <= 0) {
+        this.timeRemaining = 0;
+        this.phase = 'FINISH';
+        sound.playWhistle(true);
+        this.renderer.spawnConfetti(70);
+
+        this.banner = {
+          title: 'TIME UP! ⏱',
+          subtitle: `60s Complete! You Logged ${tState.touches} Touches!`,
+          color: '#facc15',
+          bg: 'rgba(10, 25, 45, 0.94)'
+        };
+
+        setTimeout(() => {
+          this.finishMatch();
+        }, 2200);
+      }
+    }
+
+    // 2. Decay kick animation & mistype flash
+    if (tState.kickAnim > 0) {
+      tState.kickAnim = Math.max(0, tState.kickAnim - dt * 6.5);
+    }
+    if (tState.mistypeFlash > 0) {
+      tState.mistypeFlash = Math.max(0, tState.mistypeFlash - dt * 2.8);
+    }
+
+    // 3. Ball position interpolation between feet
+    if (tState.kickAnim > 0 && tState.lastKickedFoot) {
+      const p = 1.0 - tState.kickAnim;
+      const startX = tState.lastKickedFoot === 'LEFT' ? 575 : 625;
+      const endX = tState.lastKickedFoot === 'LEFT' ? 625 : 575;
+      this.ball.x = startX + (endX - startX) * p;
+      this.ball.y = 575 - Math.sin(p * Math.PI) * 24;
+      this.ball.rotation += (tState.lastKickedFoot === 'LEFT' ? 1 : -1) * dt * 22;
+    } else {
+      const targetX = tState.currentFoot === 'LEFT' ? 575 : 625;
+      this.ball.x += (targetX - this.ball.x) * Math.min(1, dt * 12);
+      this.ball.y = 575 + Math.sin(this.renderer.tick * 0.14) * 2;
+    }
   }
 }
 

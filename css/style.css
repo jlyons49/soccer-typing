@@ -208,14 +208,21 @@ body {
   border-color: #94a3b8;
 }
 
-/* Mode Selection Cards (3 Modes) */
+/* Mode Selection Cards (4 Modes) */
 .mode-cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
   width: 100%;
-  max-width: 1060px;
+  max-width: 1160px;
   margin-bottom: 20px;
+}
+
+@media (max-width: 1100px) and (min-width: 901px) {
+  .mode-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 760px;
+  }
 }
 
 .mode-card {
