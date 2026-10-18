@@ -120,6 +120,12 @@ class SoccerTypingGame {
       trophyTotalGoals: document.getElementById('trophy-total-goals'),
       trophyTotalMatches: document.getElementById('trophy-total-matches'),
 
+      // Device & Screen Compatibility Notice
+      modalDeviceNotice: document.getElementById('modal-device-notice'),
+      currentViewportRes: document.getElementById('current-viewport-res'),
+      btnContinueDevice: document.getElementById('btn-continue-device'),
+      btnCloseDeviceNotice: document.getElementById('btn-close-device-notice'),
+
       // Sound button
       btnSound: document.getElementById('btn-sound-toggle'),
     };
@@ -129,11 +135,17 @@ class SoccerTypingGame {
 
   init() {
     this.renderer.resize();
-    window.addEventListener('resize', () => this.renderer.resize());
+    window.addEventListener('resize', () => {
+      this.renderer.resize();
+      if (this.dom.currentViewportRes && this.dom.modalDeviceNotice && !this.dom.modalDeviceNotice.classList.contains('hidden')) {
+        this.dom.currentViewportRes.textContent = `${window.innerWidth} × ${window.innerHeight}px`;
+      }
+    });
 
     this.injectCustomArtAssets();
     this.bindDOMEvents();
     this.bindKeyboardEvents();
+    this.checkDeviceCompatibility();
 
     // Start main game loop
     requestAnimationFrame((ts) => this.gameLoop(ts));
@@ -284,6 +296,53 @@ class SoccerTypingGame {
         this.endMatchEarly();
       }
     });
+
+    // Device Notice Modal Handlers
+    if (this.dom.btnContinueDevice) {
+      this.dom.btnContinueDevice.addEventListener('click', () => {
+        sound.init();
+        this.dismissDeviceNotice();
+      });
+    }
+
+    if (this.dom.btnCloseDeviceNotice) {
+      this.dom.btnCloseDeviceNotice.addEventListener('click', () => {
+        this.dismissDeviceNotice();
+      });
+    }
+  }
+
+  checkDeviceCompatibility() {
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isSmallScreen = window.innerWidth < 850 || window.innerHeight < 550;
+    const isCoarseTouch = Boolean(window.matchMedia && window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 1024);
+
+    if (isMobileUA || isSmallScreen || isCoarseTouch) {
+      const dismissed = sessionStorage.getItem('soccer_typing_device_notice_dismissed');
+      if (!dismissed) {
+        this.showDeviceNotice();
+      }
+    }
+  }
+
+  showDeviceNotice() {
+    if (this.dom.currentViewportRes) {
+      this.dom.currentViewportRes.textContent = `${window.innerWidth} × ${window.innerHeight}px`;
+    }
+    if (this.dom.modalDeviceNotice) {
+      this.dom.modalDeviceNotice.classList.remove('hidden');
+    }
+  }
+
+  dismissDeviceNotice() {
+    try {
+      sessionStorage.setItem('soccer_typing_device_notice_dismissed', '1');
+    } catch (e) {
+      // Ignore sessionStorage errors
+    }
+    if (this.dom.modalDeviceNotice) {
+      this.dom.modalDeviceNotice.classList.add('hidden');
+    }
   }
 
   showScreen(screenId) {

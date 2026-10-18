@@ -901,6 +901,51 @@ body {
   text-decoration: underline;
 }
 
+/* Device & Screen Resolution Compatibility Modal */
+.device-notice-window {
+  max-width: 600px;
+  border-color: #facc15;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(250, 204, 21, 0.2);
+}
+
+.device-notice-body {
+  text-align: center;
+  padding: 22px 24px;
+}
+
+.device-notice-icon {
+  font-size: 3.2rem;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 16px rgba(250, 204, 21, 0.5));
+}
+
+.device-notice-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: #ffeb3b;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.device-notice-body p {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+.device-screen-info {
+  margin-top: 16px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px dashed rgba(250, 204, 21, 0.4);
+  border-radius: 8px;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 /* Responsive adjustments */
 @media (max-width: 900px) {
   .game-title { font-size: 2.6rem; }
@@ -908,4 +953,11 @@ body {
   .diff-cards-grid { grid-template-columns: 1fr 1fr; }
   .summary-stats-grid { grid-template-columns: 1fr 1fr; }
   .trophy-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .device-screen-info {
+    flex-direction: column;
+    gap: 6px;
+  }
 }
