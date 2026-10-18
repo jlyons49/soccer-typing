@@ -1,0 +1,33 @@
+name: Deploy Game to Production
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Hefty Raccoon Arcade
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Sync Game to Server Subfolder
+        uses: easingthemes/ssh-deploy@v5.0.3
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.SERVER_HOST || 'game.heftyracoon.com' }}
+          REMOTE_USER: ${{ secrets.SERVER_USER || 'root' }}
+          REMOTE_PORT: ${{ secrets.SERVER_PORT || '2348' }}
+          TARGET: "/var/www/html/games/soccer-typing"
+          ARGS: "-rlgoDzvc -i --delete"
+          EXCLUDE: "/.git/, /.github/, /node_modules/, *.md, package.json"
+          SCRIPT_BEFORE: |
+            mkdir -p /var/www/html/games/soccer-typing
+          SCRIPT_AFTER: |
+            chown -R www-data:www-data /var/www/html/games/soccer-typing
+            chmod -R 755 /var/www/html/games/soccer-typing

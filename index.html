@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soccer Typing: Striker Challenge</title>
+  <meta name="description" content="An arcade soccer typing game teaching touch typing and speed! Dribble up, aim for the top bins, and beat the goalkeeper." />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Master Game Viewport Container -->
+  <div id="game-container">
+
+    <!-- In-Game Top HUD -->
+    <header id="game-hud" class="hidden" aria-label="Game HUD">
+      <div class="hud-top-bar">
+        <div class="hud-stats-group">
+          <div class="hud-stat-pill">
+            <span class="hud-stat-label">Score</span>
+            <span id="hud-score" class="hud-stat-val score">0</span>
+          </div>
+          <div class="hud-stat-pill">
+            <span id="hud-shot-number" class="hud-stat-val">SHOT 1 / 10</span>
+          </div>
+          <div class="hud-stat-pill">
+            <span class="hud-stat-label">Goals</span>
+            <span id="hud-goals" class="hud-stat-val">0</span>
+          </div>
+          <div class="hud-stat-pill">
+            <span class="hud-stat-label">Streak</span>
+            <span id="hud-streak" class="hud-stat-val streak">0</span>
+          </div>
+          <div class="hud-stat-pill">
+            <span class="hud-stat-label">Speed</span>
+            <span id="hud-wpm" class="hud-stat-val speed">0 WPM</span>
+          </div>
+          <div class="hud-stat-pill">
+            <span class="hud-stat-label">Acc</span>
+            <span id="hud-accuracy" class="hud-stat-val acc">100%</span>
+          </div>
+        </div>
+
+        <div class="hud-controls-group">
+          <button id="btn-sound-toggle" class="hud-btn-mini" title="Toggle Sound">🔊 Sound: ON</button>
+          <button id="btn-fullscreen-toggle" class="hud-btn-mini" title="Toggle Fullscreen">⛶ Fullscreen</button>
+          <button id="btn-hud-exit" class="hud-btn-mini" title="Exit Match">✕ Exit</button>
+        </div>
+      </div>
+
+      <!-- Lead-up Approach Progress Bar -->
+      <div class="leadup-timer-container">
+        <div class="leadup-timer-label-row">
+          <span style="color: #00f0ff;">🏃 STRIKER APPROACH RUN</span>
+          <span id="leadup-timer-text" style="color: #00ff66;">6.0s</span>
+        </div>
+        <div class="leadup-track">
+          <div id="leadup-timer-bar" class="leadup-bar"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- HTML5 2.5D Canvas -->
+    <canvas id="game-canvas" width="1200" height="750"></canvas>
+
+    <!-- =====================================================================
+         SCREEN 1: MAIN MENU
+         ===================================================================== -->
+    <div id="screen-menu" class="screen-overlay">
+      <div class="game-title-group">
+        <div class="game-title-badge">★ ARCADE SOCCER TYPING ★</div>
+        <h1 class="game-title">STRIKER CHALLENGE</h1>
+        <p class="game-subtitle">Top Bins • Speed Touch Typing • Championship Glory</p>
+      </div>
+
+      <div class="menu-actions">
+        <button id="btn-start-game" class="btn-arcade btn-arcade-primary">
+          ⚽ PLAY GAME
+        </button>
+        <button id="btn-trophy-case" class="btn-arcade btn-arcade-gold">
+          🏆 TROPHY CASE
+        </button>
+        <button id="btn-how-to-play" class="btn-arcade">
+          📖 HOW TO PLAY
+        </button>
+        <a href="../../index.html" class="btn-arcade btn-arcade-back">
+          ◀ Back to Arcade Portal
+        </a>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         SCREEN 2: MODE SELECTION
+         ===================================================================== -->
+    <div id="screen-mode" class="screen-overlay hidden">
+      <div class="game-title-group">
+        <h2 class="game-title" style="font-size: 2.8rem;">SELECT MATCH MODE</h2>
+        <p class="game-subtitle">Choose your soccer training discipline</p>
+      </div>
+
+      <div class="mode-cards-grid">
+        <!-- Mode 1: Shooting Practice (Fully Implemented) -->
+        <div id="btn-mode-shooting" class="mode-card">
+          <div class="mode-card-badge badge-active">✔ AVAILABLE NOW</div>
+          <div class="mode-card-icon">🎯</div>
+          <h3 class="mode-card-title">SHOOTING PRACTICE</h3>
+          <p class="mode-card-desc">
+            Test your speed and precision in a 10-shot shootout! Type target words placed on different parts of the goal during the striker's approach run.
+          </p>
+          <ul class="mode-card-features">
+            <li>• <b>Corners (Top Bins / Upper 90)</b>: Harder words, x1.75 pts & highest score chance!</li>
+            <li>• <b>Center Power Strikes</b>: Short/fast words, goalie can reach easier.</li>
+            <li>• <b>Lead-Up Timing</b>: Beat the keeper before your approach finishes.</li>
+          </ul>
+        </div>
+
+        <!-- Mode 2: Full Soccer Game (Under Construction) -->
+        <div id="btn-mode-fullgame" class="mode-card under-construction">
+          <div class="mode-card-badge badge-wip">🚧 UNDER CONSTRUCTION</div>
+          <div class="mode-card-icon">⚽</div>
+          <h3 class="mode-card-title">FULL 11v11 MATCH</h3>
+          <p class="mode-card-desc">
+            Full pitch soccer game with passing combinations, sliding defensive tackles, fast breaks, and counter-attacks.
+          </p>
+          <ul class="mode-card-features">
+            <li>• <b>Passing Chains</b>: Type teammates' words to pass upfield.</li>
+            <li>• <b>Defense / Tackles</b>: Intercept opponent attacks with reaction words.</li>
+            <li>• <i>Click to inspect the tactical roadmap & feature plans!</i></li>
+          </ul>
+        </div>
+      </div>
+
+      <button id="btn-back-to-menu-from-mode" class="btn-arcade btn-arcade-back">
+        ◀ Back to Main Menu
+      </button>
+    </div>
+
+    <!-- =====================================================================
+         SCREEN 3: DIFFICULTY SELECTION
+         ===================================================================== -->
+    <div id="screen-difficulty" class="screen-overlay hidden">
+      <div class="game-title-group">
+        <h2 class="game-title" style="font-size: 2.8rem;">SELECT DIFFICULTY</h2>
+        <p class="game-subtitle">Scales word length, lead-up approach time, and score multiplier</p>
+      </div>
+
+      <div class="diff-cards-grid">
+        <!-- Rookie -->
+        <div class="diff-card" data-difficulty="rookie">
+          <div class="diff-icon">🥉</div>
+          <h3 class="diff-title">ROOKIE</h3>
+          <div class="diff-specs">
+            <b>3 – 4 Letters</b><br>
+            8.5s Lead-Up Time<br>
+            Multiplier: 1.0x
+          </div>
+          <div id="diff-rookie-score" class="diff-record">Record: 0 pts</div>
+        </div>
+
+        <!-- Semi-Pro -->
+        <div class="diff-card" data-difficulty="semiPro">
+          <div class="diff-icon">🥈</div>
+          <h3 class="diff-title">SEMI-PRO</h3>
+          <div class="diff-specs">
+            <b>4 – 7 Letters</b><br>
+            6.0s Lead-Up Time<br>
+            Multiplier: 1.5x
+          </div>
+          <div id="diff-semipro-score" class="diff-record">Record: 0 pts</div>
+        </div>
+
+        <!-- Pro Striker -->
+        <div class="diff-card" data-difficulty="pro">
+          <div class="diff-icon">🥇</div>
+          <h3 class="diff-title">PRO STRIKER</h3>
+          <div class="diff-specs">
+            <b>6 – 9 Letters</b><br>
+            4.5s Lead-Up Time<br>
+            Multiplier: 2.2x
+          </div>
+          <div id="diff-pro-score" class="diff-record">Record: 0 pts</div>
+        </div>
+
+        <!-- World Class -->
+        <div class="diff-card" data-difficulty="worldClass">
+          <div class="diff-icon">💎</div>
+          <h3 class="diff-title">WORLD CLASS</h3>
+          <div class="diff-specs">
+            <b>7 – 13 Letters</b><br>
+            3.2s Lead-Up Time<br>
+            Multiplier: 3.5x
+          </div>
+          <div id="diff-world-score" class="diff-record">Record: 0 pts</div>
+        </div>
+      </div>
+
+      <button id="btn-back-to-mode" class="btn-arcade btn-arcade-back">
+        ◀ Back to Match Modes
+      </button>
+    </div>
+
+    <!-- =====================================================================
+         SCREEN 4: MATCH SUMMARY
+         ===================================================================== -->
+    <div id="screen-summary" class="screen-overlay hidden">
+      <div class="summary-card">
+        <h2 class="summary-title">SHOOTOUT FINISHED!</h2>
+        
+        <div id="sum-rating-badge" class="rating-badge">A</div>
+
+        <div id="sum-highscore-badge" class="highscore-pill hidden">
+          ★ NEW HIGH SCORE RECORD! ★
+        </div>
+
+        <div class="summary-stats-grid">
+          <div class="sum-stat-box">
+            <div class="sum-stat-label">Final Score</div>
+            <div id="sum-final-score" class="sum-stat-val" style="color: #ffeb3b;">0</div>
+          </div>
+          <div class="sum-stat-box">
+            <div class="sum-stat-label">Goals Scored</div>
+            <div id="sum-goals" class="sum-stat-val" style="color: #00ff66;">0 / 10</div>
+          </div>
+          <div class="sum-stat-box">
+            <div class="sum-stat-label">Typing Speed</div>
+            <div id="sum-wpm" class="sum-stat-val" style="color: #00f0ff;">0 WPM</div>
+          </div>
+          <div class="sum-stat-box">
+            <div class="sum-stat-label">Accuracy</div>
+            <div id="sum-accuracy" class="sum-stat-val" style="color: #c084fc;">100%</div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 14px;">
+          Best Consecutive Goal Streak: <b id="sum-streak" style="color: #ff9900;">0</b>
+        </div>
+
+        <div id="sum-new-trophies-list" class="hidden"></div>
+
+        <div class="summary-actions-row">
+          <button id="btn-play-again" class="btn-arcade btn-arcade-primary" style="font-size: 1.1rem; padding: 12px 20px;">
+            🔁 PLAY AGAIN
+          </button>
+          <button id="btn-change-diff" class="btn-arcade" style="font-size: 1.0rem; padding: 12px 18px;">
+            ⚙ DIFFICULTY
+          </button>
+          <button id="btn-summary-trophies" class="btn-arcade btn-arcade-gold" style="font-size: 1.0rem; padding: 12px 18px;">
+            🏆 TROPHIES
+          </button>
+          <button id="btn-summary-menu" class="btn-arcade" style="font-size: 1.0rem; padding: 12px 18px;">
+            🏠 MENU
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 1: TROPHY CASE & HIGH SCORES
+         ===================================================================== -->
+    <div id="modal-trophy" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h3 class="modal-title">🏆 STRIKER TROPHY CASE & CABINET</h3>
+          <button id="btn-close-trophy" class="modal-close-btn" title="Close">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="trophy-meta-bar">
+            <span>Career Goals: <b id="trophy-total-goals" style="color: #00ff66;">0</b></span>
+            <span>Shootouts Played: <b id="trophy-total-matches" style="color: #00f0ff;">0</b></span>
+            <span>Trophies Unlocked: <b style="color: #ffeb3b;">10 Available</b></span>
+          </div>
+
+          <div id="trophy-grid" class="trophy-grid">
+            <!-- Populated dynamically by game.js -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-reset-scores" class="btn-arcade btn-arcade-back" style="margin: 0; color: #f87171; border-color: #ef4444;">
+            ⚠ Reset Records
+          </button>
+          <button onclick="document.getElementById('modal-trophy').classList.add('hidden')" class="btn-arcade" style="padding: 6px 18px; font-size: 0.95rem;">
+            Close Cabinet
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 2: HOW TO PLAY
+         ===================================================================== -->
+    <div id="modal-rules" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h3 class="modal-title">📖 HOW TO PLAY SOCCER TYPING</h3>
+          <button id="btn-close-rules" class="modal-close-btn" title="Close">✕</button>
+        </div>
+
+        <div class="modal-body" style="text-align: left; line-height: 1.6; font-size: 0.95rem;">
+          <p style="margin-bottom: 12px;">
+            <b>Soccer Typing</b> is inspired by classic arcade typing games like <i>Slam Dunk Typing</i>.
+            Your keyboard commands the striker on the pitch!
+          </p>
+
+          <h4 style="color: #00f0ff; margin: 14px 0 6px;">1. The Approach Run</h4>
+          <p>
+            When each shot begins, the referee blows the whistle and your striker approaches the ball.
+            A green progress bar at the top displays your remaining lead-up time.
+          </p>
+
+          <h4 style="color: #00f0ff; margin: 14px 0 6px;">2. Pick Your Goal Target</h4>
+          <p>
+            Target badges hover over different zones of the goal:
+          </p>
+          <ul style="padding-left: 20px; margin: 8px 0;">
+            <li><b style="color: #ff0055;">Top Left & Top Right Corners (Top Bins / Upper 90)</b>: Longer, more challenging words, but score a huge <b>1.75x bonus</b> and have a <b>~94% goal chance</b> because the goalkeeper cannot reach them easily!</li>
+            <li><b style="color: #ff9900;">Bottom Left & Bottom Right (Side Netting)</b>: 1.45x score bonus with ~88% goal chance.</li>
+            <li><b style="color: #00e5ff;">Center (Power Strike)</b>: Shorter words, but the keeper stands right in the middle — you must type fast to beat them!</li>
+          </ul>
+
+          <h4 style="color: #00f0ff; margin: 14px 0 6px;">3. Type to Strike</h4>
+          <p>
+            Press the first letter of any target's word to lock onto that shot. Type the rest of the letters before your lead-up timer expires to unleash the kick!
+          </p>
+        </div>
+
+        <div class="modal-footer" style="justify-content: flex-end;">
+          <button onclick="document.getElementById('modal-rules').classList.add('hidden')" class="btn-arcade" style="padding: 6px 18px; font-size: 0.95rem;">
+            Got It, Let's Play!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 3: FULL GAME MODE ROADMAP (UNDER CONSTRUCTION)
+         ===================================================================== -->
+    <div id="modal-construction" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h3 class="modal-title">🚧 FULL SOCCER GAME • TACTICAL BLUEPRINT</h3>
+          <button id="btn-close-construction" class="modal-close-btn" title="Close">✕</button>
+        </div>
+
+        <div class="modal-body" style="text-align: left; line-height: 1.6;">
+          <p>
+            <b>Mode 2: Full 11v11 Match</b> is currently under construction while we engineer the pitch physics and team AI!
+          </p>
+
+          <div class="tactical-board">
+            <h4>📋 TACTICAL PLAYBOOK IN DEVELOPMENT:</h4>
+            <ul>
+              <li><b>Midfield Passing Chains</b>: Teammates make runs into space. Type their designated word before an opponent defender closes them down to complete the pass.</li>
+              <li><b>Through Balls & Crosses</b>: High-speed typing combos trigger curving crosses into the penalty box.</li>
+              <li><b>Defensive Sliding Tackles</b>: When the opposing AI attacks your goal, type quick reaction intercept words to dispossess them and launch counter-attacks!</li>
+              <li><b>Penalty & Free Kick Shootouts</b>: Full regulation matches with extra time and penalty deciders.</li>
+            </ul>
+          </div>
+
+          <p style="font-size: 0.9rem; color: #cbd5e1;">
+            <i>Stay tuned! In the meantime, master your precision and speed in <b>Shooting Practice</b>!</i>
+          </p>
+        </div>
+
+        <div class="modal-footer" style="justify-content: flex-end;">
+          <button onclick="document.getElementById('modal-construction').classList.add('hidden')" class="btn-arcade btn-arcade-primary" style="padding: 6px 18px; font-size: 0.95rem;">
+            Back to Match Selection
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Arcade Portal Footer Navigation -->
+  <footer class="arcade-portal-bar">
+    <a href="../../index.html" class="portal-link">
+      <span>🕹️</span> <span>Return to Hefty Raccoon Arcade Portal</span>
+    </a>
+    <span>Soccer Typing: Striker Challenge • v1.0.0</span>
+  </footer>
+
+  <!-- Main Game Script Entry -->
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
