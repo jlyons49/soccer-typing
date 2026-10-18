@@ -18,17 +18,17 @@
       <div class="hud-top-bar">
         <div class="hud-stats-group">
           <div class="hud-stat-pill">
-            <span class="hud-stat-label">Score</span>
+            <span id="hud-score-label" class="hud-stat-label">Score</span>
             <span id="hud-score" class="hud-stat-val score">0</span>
           </div>
           <div class="hud-stat-pill">
             <span id="hud-shot-number" class="hud-stat-val">SHOT 1 / 10</span>
           </div>
-          <div class="hud-stat-pill">
-            <span class="hud-stat-label">Goals</span>
+          <div id="hud-goals-pill" class="hud-stat-pill">
+            <span id="hud-goals-label" class="hud-stat-label">Goals</span>
             <span id="hud-goals" class="hud-stat-val">0</span>
           </div>
-          <div class="hud-stat-pill">
+          <div id="hud-streak-pill" class="hud-stat-pill">
             <span class="hud-stat-label">Streak</span>
             <span id="hud-streak" class="hud-stat-val streak">0</span>
           </div>
@@ -49,10 +49,10 @@
         </div>
       </div>
 
-      <!-- Lead-up Approach Progress Bar -->
+      <!-- Lead-up Approach / Field Progress Bar -->
       <div class="leadup-timer-container">
         <div class="leadup-timer-label-row">
-          <span style="color: #00f0ff;">🏃 STRIKER APPROACH RUN</span>
+          <span id="leadup-timer-title" style="color: #00f0ff;">🏃 STRIKER APPROACH RUN</span>
           <span id="leadup-timer-text" style="color: #00ff66;">6.0s</span>
         </div>
         <div class="leadup-track">
@@ -96,12 +96,12 @@
          ===================================================================== -->
     <div id="screen-mode" class="screen-overlay hidden">
       <div class="game-title-group">
-        <h2 class="game-title" style="font-size: 2.8rem;">SELECT MATCH MODE</h2>
+        <h2 class="game-title" style="font-size: 2.6rem;">SELECT MATCH MODE</h2>
         <p class="game-subtitle">Choose your soccer training discipline</p>
       </div>
 
       <div class="mode-cards-grid">
-        <!-- Mode 1: Shooting Practice (Fully Implemented) -->
+        <!-- Mode 1: Shooting Practice -->
         <div id="btn-mode-shooting" class="mode-card">
           <div class="mode-card-badge badge-active">✔ AVAILABLE NOW</div>
           <div id="icon-mode-shooting" class="mode-card-icon">🎯</div>
@@ -110,13 +110,28 @@
             Test your speed and precision in a 10-shot shootout! Type target words placed on different parts of the goal during the striker's approach run.
           </p>
           <ul class="mode-card-features">
-            <li>• <b>Corners (Top Bins / Upper 90)</b>: Harder words, x1.75 pts & highest score chance!</li>
-            <li>• <b>Center Power Strikes</b>: Short/fast words, goalie can reach easier.</li>
-            <li>• <b>Lead-Up Timing</b>: Beat the keeper before your approach finishes.</li>
+            <li>• <b>Corners (Top Bins)</b>: Harder words, x1.75 pts & highest goal chance!</li>
+            <li>• <b>Center Strikes</b>: Shorter words, goalie can reach easier.</li>
+            <li>• <b>Score Metric</b>: Total points across 10 shots.</li>
           </ul>
         </div>
 
-        <!-- Mode 2: Full Soccer Game (Under Construction) -->
+        <!-- Mode 2: Dribbling Drill (New Mode!) -->
+        <div id="btn-mode-dribbling" class="mode-card">
+          <div class="mode-card-badge badge-active">✔ NEW MODE</div>
+          <div id="icon-mode-dribbling" class="mode-card-icon">🏃</div>
+          <h3 class="mode-card-title">DRIBBLING DRILL</h3>
+          <p class="mode-card-desc">
+            Sprint 100m across the field weaving through slalom cones! Each touch of the ball requires typing a presented word.
+          </p>
+          <ul class="mode-card-features">
+            <li>• <b>No Word Time Limit</b>: Take your time on each individual touch.</li>
+            <li>• <b>Clean Footwork</b>: Mistyping a key resets the current word to retype!</li>
+            <li>• <b>Score Metric</b>: Total elapsed time to cross the field (fastest wins).</li>
+          </ul>
+        </div>
+
+        <!-- Mode 3: Full Soccer Game (Under Construction) -->
         <div id="btn-mode-fullgame" class="mode-card under-construction">
           <div class="mode-card-badge badge-wip">🚧 UNDER CONSTRUCTION</div>
           <div id="icon-mode-fullgame" class="mode-card-icon">⚽</div>
@@ -138,59 +153,71 @@
     </div>
 
     <!-- =====================================================================
-         SCREEN 3: DIFFICULTY SELECTION
+         SCREEN 3: DIFFICULTY SELECTION (5 TIERS)
          ===================================================================== -->
     <div id="screen-difficulty" class="screen-overlay hidden">
       <div class="game-title-group">
-        <h2 class="game-title" style="font-size: 2.8rem;">SELECT DIFFICULTY</h2>
-        <p class="game-subtitle">Scales word length, lead-up approach time, and score multiplier</p>
+        <h2 class="game-title" style="font-size: 2.6rem;">SELECT DIFFICULTY</h2>
+        <p id="diff-screen-subtitle" class="game-subtitle">Scales word length, lead-up approach time, and score multiplier</p>
       </div>
 
       <div class="diff-cards-grid">
-        <!-- Rookie -->
+        <!-- 1. Rookie (Easiest) -->
         <div class="diff-card" data-difficulty="rookie">
-          <div id="icon-diff-rookie" class="diff-icon">🥉</div>
+          <div id="icon-diff-rookie" class="diff-icon">🌱</div>
           <h3 class="diff-title">ROOKIE</h3>
-          <div class="diff-specs">
-            <b>3 – 4 Letters</b><br>
-            8.5s Lead-Up Time<br>
+          <div id="diff-rookie-specs" class="diff-specs">
+            <b>2 – 3 Letters</b><br>
+            12.0s Lead-Up Time<br>
             Multiplier: 1.0x
           </div>
           <div id="diff-rookie-score" class="diff-record">Record: 0 pts</div>
         </div>
 
-        <!-- Semi-Pro -->
+        <!-- 2. Amateur -->
+        <div class="diff-card" data-difficulty="amateur">
+          <div id="icon-diff-amateur" class="diff-icon">🥉</div>
+          <h3 class="diff-title">AMATEUR</h3>
+          <div id="diff-amateur-specs" class="diff-specs">
+            <b>3 – 5 Letters</b><br>
+            8.5s Lead-Up Time<br>
+            Multiplier: 1.4x
+          </div>
+          <div id="diff-amateur-score" class="diff-record">Record: 0 pts</div>
+        </div>
+
+        <!-- 3. Semi-Pro -->
         <div class="diff-card" data-difficulty="semiPro">
           <div id="icon-diff-semipro" class="diff-icon">🥈</div>
           <h3 class="diff-title">SEMI-PRO</h3>
-          <div class="diff-specs">
-            <b>4 – 7 Letters</b><br>
+          <div id="diff-semipro-specs" class="diff-specs">
+            <b>5 – 7 Letters</b><br>
             6.0s Lead-Up Time<br>
-            Multiplier: 1.5x
+            Multiplier: 2.0x
           </div>
           <div id="diff-semipro-score" class="diff-record">Record: 0 pts</div>
         </div>
 
-        <!-- Pro Striker -->
+        <!-- 4. Pro Striker -->
         <div class="diff-card" data-difficulty="pro">
           <div id="icon-diff-pro" class="diff-icon">🥇</div>
           <h3 class="diff-title">PRO STRIKER</h3>
-          <div class="diff-specs">
-            <b>6 – 9 Letters</b><br>
-            4.5s Lead-Up Time<br>
-            Multiplier: 2.2x
+          <div id="diff-pro-specs" class="diff-specs">
+            <b>7 – 10 Letters</b><br>
+            4.2s Lead-Up Time<br>
+            Multiplier: 3.0x
           </div>
           <div id="diff-pro-score" class="diff-record">Record: 0 pts</div>
         </div>
 
-        <!-- World Class -->
+        <!-- 5. World Class (Hardest) -->
         <div class="diff-card" data-difficulty="worldClass">
           <div id="icon-diff-world" class="diff-icon">💎</div>
           <h3 class="diff-title">WORLD CLASS</h3>
-          <div class="diff-specs">
-            <b>7 – 13 Letters</b><br>
-            3.2s Lead-Up Time<br>
-            Multiplier: 3.5x
+          <div id="diff-world-specs" class="diff-specs">
+            <b>9 – 15 Letters</b><br>
+            2.6s Lead-Up Time<br>
+            Multiplier: 4.5x
           </div>
           <div id="diff-world-score" class="diff-record">Record: 0 pts</div>
         </div>
@@ -206,21 +233,21 @@
          ===================================================================== -->
     <div id="screen-summary" class="screen-overlay hidden">
       <div class="summary-card">
-        <h2 class="summary-title">SHOOTOUT FINISHED!</h2>
+        <h2 id="sum-title" class="summary-title">SHOOTOUT FINISHED!</h2>
         
         <div id="sum-rating-badge" class="rating-badge">A</div>
 
         <div id="sum-highscore-badge" class="highscore-pill hidden">
-          ★ NEW HIGH SCORE RECORD! ★
+          ★ NEW PERSONAL RECORD! ★
         </div>
 
         <div class="summary-stats-grid">
           <div class="sum-stat-box">
-            <div class="sum-stat-label">Final Score</div>
+            <div id="sum-score-label" class="sum-stat-label">Final Score</div>
             <div id="sum-final-score" class="sum-stat-val" style="color: #ffeb3b;">0</div>
           </div>
           <div class="sum-stat-box">
-            <div class="sum-stat-label">Goals Scored</div>
+            <div id="sum-goals-label" class="sum-stat-label">Goals Scored</div>
             <div id="sum-goals" class="sum-stat-val" style="color: #00ff66;">0 / 10</div>
           </div>
           <div class="sum-stat-box">
@@ -233,8 +260,8 @@
           </div>
         </div>
 
-        <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 14px;">
-          Best Consecutive Goal Streak: <b id="sum-streak" style="color: #ff9900;">0</b>
+        <div id="sum-streak-row" style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 14px;">
+          <span id="sum-streak-label">Best Consecutive Goal Streak:</span> <b id="sum-streak" style="color: #ff9900;">0</b>
         </div>
 
         <div id="sum-new-trophies-list" class="hidden"></div>
@@ -262,15 +289,19 @@
     <div id="modal-trophy" class="modal-overlay hidden" role="dialog" aria-modal="true">
       <div class="modal-window">
         <div class="modal-header">
-          <h3 class="modal-title">🏆 STRIKER TROPHY CASE & CABINET</h3>
+          <h3 class="modal-title">🏆 STRIKER TROPHY CASE & RECORDS</h3>
           <button id="btn-close-trophy" class="modal-close-btn" title="Close">✕</button>
         </div>
 
         <div class="modal-body">
           <div class="trophy-meta-bar">
             <span>Career Goals: <b id="trophy-total-goals" style="color: #00ff66;">0</b></span>
-            <span>Shootouts Played: <b id="trophy-total-matches" style="color: #00f0ff;">0</b></span>
-            <span>Trophies Unlocked: <b style="color: #ffeb3b;">10 Available</b></span>
+            <span>Matches & Drills: <b id="trophy-total-matches" style="color: #00f0ff;">0</b></span>
+            <span>Trophies Available: <b style="color: #ffeb3b;">12 Trophies</b></span>
+          </div>
+
+          <div id="trophy-records-table-wrap" class="records-table-wrap">
+            <!-- Populated dynamically by game.js with Shooting Practice & Dribbling Drill records across all 5 tiers -->
           </div>
 
           <div id="trophy-grid" class="trophy-grid">
@@ -302,29 +333,24 @@
         <div class="modal-body" style="text-align: left; line-height: 1.6; font-size: 0.95rem;">
           <p style="margin-bottom: 12px;">
             <b>Soccer Typing</b> is inspired by classic arcade typing games like <i>Slam Dunk Typing</i>.
-            Your keyboard commands the striker on the pitch!
+            Your keyboard commands the player on the pitch across 5 scalable difficulty levels!
           </p>
 
-          <h4 style="color: #00f0ff; margin: 14px 0 6px;">1. The Approach Run</h4>
-          <p>
-            When each shot begins, the referee blows the whistle and your striker approaches the ball.
-            A green progress bar at the top displays your remaining lead-up time.
-          </p>
-
-          <h4 style="color: #00f0ff; margin: 14px 0 6px;">2. Pick Your Goal Target</h4>
-          <p>
-            Target badges hover over different zones of the goal:
-          </p>
-          <ul style="padding-left: 20px; margin: 8px 0;">
-            <li><b style="color: #ff0055;">Top Left & Top Right Corners (Top Bins / Upper 90)</b>: Longer, more challenging words, but score a huge <b>1.75x bonus</b> and have a <b>~94% goal chance</b> because the goalkeeper cannot reach them easily!</li>
-            <li><b style="color: #ff9900;">Bottom Left & Bottom Right (Side Netting)</b>: 1.45x score bonus with ~88% goal chance.</li>
-            <li><b style="color: #00e5ff;">Center (Power Strike)</b>: Shorter words, but the keeper stands right in the middle — you must type fast to beat them!</li>
+          <h4 style="color: #00f0ff; margin: 14px 0 6px;">🎯 Mode 1: Shooting Practice</h4>
+          <ul style="padding-left: 20px; margin: 6px 0;">
+            <li>During each approach run, target words appear on different parts of the goal.</li>
+            <li><b style="color: #ff0055;">Top & Bottom Corners</b>: Longer words, up to <b>1.75x points</b> & <b>~94% goal probability</b>!</li>
+            <li><b style="color: #00e5ff;">Center Target</b>: Shorter words, but the goalkeeper can reach them more easily.</li>
+            <li>Type the word before the lead-up timer runs out to unleash your shot!</li>
           </ul>
 
-          <h4 style="color: #00f0ff; margin: 14px 0 6px;">3. Type to Strike</h4>
-          <p>
-            Press the first letter of any target's word to lock onto that shot. Type the rest of the letters before your lead-up timer expires to unleash the kick!
-          </p>
+          <h4 style="color: #00ff66; margin: 14px 0 6px;">🏃 Mode 2: Dribbling Drill</h4>
+          <ul style="padding-left: 20px; margin: 6px 0;">
+            <li>Dribble 100 meters across the field by typing a word for each touch of the ball.</li>
+            <li><b>No Individual Word Time Limit</b>: Take as long as you need on each word.</li>
+            <li><b>Mistype Reset</b>: Mistyping a letter forces you to retype the current word from the beginning!</li>
+            <li><b>Time Trial Score</b>: Your score is the <b>total elapsed time</b> it takes to cross the entire field.</li>
+          </ul>
         </div>
 
         <div class="modal-footer" style="justify-content: flex-end;">

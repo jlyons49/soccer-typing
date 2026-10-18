@@ -245,30 +245,42 @@ export class StadiumRenderer {
     // 2. Draw Multi-Tiered Stadium Stands, Banners & Animated Crowd
     this.drawCrowd(gameState.isGoalScored);
 
-    // 3. Draw Lush 2.5D Pitch (Grass stripes, radial lines, chalk lines, corner flags)
-    this.drawPitch();
+    if (gameState.mode === 'dribblingDrill' && (gameState.state === 'PLAYING' || gameState.state === 'SUMMARY')) {
+      // Dribbling Drill Full-Pitch Side-Scrolling View
+      this.drawDribblingPitch(gameState);
+      this.drawDribblingCones(gameState);
+      this.updateAndDrawBallTrail(gameState);
+      this.drawStriker(gameState.striker, 1.0, gameState.phase);
+      this.drawBall(gameState.ball);
+      if (gameState.phase === 'TYPING' || gameState.phase === 'KICKING') {
+        this.drawDribbleWordPlate(gameState);
+      }
+    } else {
+      // 3. Draw Lush 2.5D Pitch (Grass stripes, radial lines, chalk lines, corner flags)
+      this.drawPitch();
 
-    // 4. Draw 3D Goal Structure, Stanchions & Reactive Hexagonal Netting
-    const goalBounds = this.getGoalBounds();
-    this.drawGoalNet(goalBounds, gameState.netBulge);
-    this.drawGoalFrame(goalBounds);
+      // 4. Draw 3D Goal Structure, Stanchions & Reactive Hexagonal Netting
+      const goalBounds = this.getGoalBounds();
+      this.drawGoalNet(goalBounds, gameState.netBulge);
+      this.drawGoalFrame(goalBounds);
 
-    // 5. Draw Goalkeeper Character Sprite
-    this.drawGoalkeeper(goalBounds, gameState.keeper, gameState.ball);
+      // 5. Draw Goalkeeper Character Sprite
+      this.drawGoalkeeper(goalBounds, gameState.keeper, gameState.ball);
 
-    // 6. Draw Target Reticles & Keycap Word Plates on Goal
-    if (gameState.phase === 'TYPING' || gameState.phase === 'APPROACH') {
-      this.drawTargets(gameState.targets, gameState.activeTargetIndex, gameState.leadUpRatio);
+      // 6. Draw Target Reticles & Keycap Word Plates on Goal
+      if (gameState.phase === 'TYPING' || gameState.phase === 'APPROACH') {
+        this.drawTargets(gameState.targets, gameState.activeTargetIndex, gameState.leadUpRatio);
+      }
+
+      // 7. Update & Draw Ball Aerodynamic Ribbon Trail
+      this.updateAndDrawBallTrail(gameState);
+
+      // 8. Draw Striker Character Sprite
+      this.drawStriker(gameState.striker, gameState.leadUpRatio, gameState.phase);
+
+      // 9. Draw Pro Match Soccer Ball
+      this.drawBall(gameState.ball);
     }
-
-    // 7. Update & Draw Ball Aerodynamic Ribbon Trail
-    this.updateAndDrawBallTrail(gameState);
-
-    // 8. Draw Striker Character Sprite
-    this.drawStriker(gameState.striker, gameState.leadUpRatio, gameState.phase);
-
-    // 9. Draw Pro Match Soccer Ball
-    this.drawBall(gameState.ball);
 
     // 10. Update & Draw Shockwave Rings & Particles
     this.updateAndDrawShockwaves();
@@ -277,7 +289,7 @@ export class StadiumRenderer {
     // 11. Update & Draw Floating Text Popups
     this.updateAndDrawFloatingTexts();
 
-    // 12. Big Broadcast Banner Overlay (GOAL / SAVED / TIME UP)
+    // 12. Big Broadcast Banner Overlay (GOAL / SAVED / TIME UP / FINISH)
     if (gameState.banner) {
       this.drawBanner(gameState.banner);
     }
@@ -1744,6 +1756,297 @@ export class StadiumRenderer {
       x: goalBounds.left + zone.xPercent * goalBounds.width,
       y: goalBounds.top + zone.yPercent * goalBounds.height + 35
     };
+  }
+
+  // =========================================================================
+  // DRIBBLING DRILL MODE RENDERING (Side-Scrolling 100m Field & Slalom Cones)
+  // =========================================================================
+  drawDribblingPitch(gameState) {
+    const pitchTop = this.height * 0.22;
+    const pitchHeight = this.height - pitchTop;
+    const dState = gameState.dribbleState || {};
+    const cameraX = dState.cameraX || 0; // Pixels scrolled along the 100m field
+    const pixelsPerMeter = 28; // 100m = 2800px total pitch scroll length
+    const startWorldX = 360;
+
+    // 1. Vertical Mowed Turf Stripes scrolling horizontally with cameraX
+    const stripeWidth = 140; // 5m per stripe
+    const firstStripeIndex = Math.floor((cameraX - 200) / stripeWidth);
+    const lastStripeIndex = Math.ceil((cameraX + this.width + 200) / stripeWidth);
+
+    for (let i = firstStripeIndex; i <= lastStripeIndex; i++) {
+      const sx = i * stripeWidth - cameraX;
+      this.ctx.fillStyle = Math.abs(i) % 2 === 0 ? '#1e6b24' : '#17561c';
+      this.ctx.fillRect(sx, pitchTop, stripeWidth + 1, pitchHeight);
+    }
+
+    // Horizontal subtle shading gradient for depth
+    const depthGrad = this.ctx.createLinearGradient(0, pitchTop, 0, this.height);
+    depthGrad.addColorStop(0, 'rgba(0, 15, 5, 0.42)');
+    depthGrad.addColorStop(0.35, 'rgba(255, 255, 220, 0.06)');
+    depthGrad.addColorStop(1, 'rgba(0, 12, 4, 0.35)');
+    this.ctx.fillStyle = depthGrad;
+    this.ctx.fillRect(0, pitchTop, this.width, pitchHeight);
+
+    // Top & Bottom Touchlines (Sidelines)
+    const topTouchY = pitchTop + 42;
+    const botTouchY = this.height - 34;
+
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    this.ctx.lineWidth = 4;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, topTouchY);
+    this.ctx.lineTo(this.width, topTouchY);
+    this.ctx.moveTo(0, botTouchY);
+    this.ctx.lineTo(this.width, botTouchY);
+    this.ctx.stroke();
+
+    // Yardage / Meter Chalk Lines every 10m from 0m to 100m
+    this.ctx.font = 'bold 13px "Impact", "Segoe UI", sans-serif';
+    this.ctx.textAlign = 'center';
+
+    for (let m = 0; m <= 100; m += 10) {
+      const wx = startWorldX + m * pixelsPerMeter;
+      const sx = wx - cameraX;
+      if (sx < -120 || sx > this.width + 120) continue;
+
+      const isMajor = m === 0 || m === 50 || m === 100;
+      this.ctx.strokeStyle = isMajor ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.35)';
+      this.ctx.lineWidth = isMajor ? 4 : 2;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(sx, topTouchY);
+      this.ctx.lineTo(sx, botTouchY);
+      this.ctx.stroke();
+
+      // Center circle at 50m Midfield
+      if (m === 50) {
+        const midY = (topTouchY + botTouchY) / 2;
+        this.ctx.beginPath();
+        this.ctx.ellipse(sx, midY, 75, 110, 0, 0, Math.PI * 2);
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.arc(sx, midY, 5, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+
+      // Checkered Finish Line Banner at 100m
+      if (m === 100) {
+        const sqSize = 14;
+        const rows = Math.floor((botTouchY - topTouchY) / sqSize);
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < 2; c++) {
+            this.ctx.fillStyle = (r + c) % 2 === 0 ? 'rgba(255,255,255,0.88)' : 'rgba(15,23,42,0.88)';
+            this.ctx.fillRect(sx + c * sqSize, topTouchY + r * sqSize, sqSize, sqSize);
+          }
+        }
+        // Finish Line Flag Posts
+        this.drawCornerFlag(sx + 14, topTouchY, '#00ff66');
+        this.drawCornerFlag(sx + 14, botTouchY, '#00ff66');
+      }
+
+      // Yardage Label on Sideline
+      const label = m === 0 ? 'START 0m' : (m === 50 ? 'MIDFIELD 50m' : (m === 100 ? 'FINISH 100m' : `${m}m`));
+      this.ctx.fillStyle = m === 100 ? '#00ff66' : (isMajor ? '#ffeb3b' : 'rgba(255,255,255,0.75)');
+      this.ctx.fillText(label, sx, topTouchY - 12);
+      this.ctx.fillText(label, sx, botTouchY + 20);
+    }
+  }
+
+  drawDribblingCones(gameState) {
+    const dState = gameState.dribbleState;
+    if (!dState || !dState.cones) return;
+    const cameraX = dState.cameraX || 0;
+
+    // Dashed slalom path connecting cones
+    this.ctx.save();
+    this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.32)';
+    this.ctx.lineWidth = 3;
+    this.ctx.setLineDash([8, 6]);
+    this.ctx.beginPath();
+    dState.cones.forEach((cone, idx) => {
+      const sx = cone.worldX - cameraX;
+      const sy = cone.y;
+      if (idx === 0) this.ctx.moveTo(sx, sy);
+      else this.ctx.lineTo(sx, sy);
+    });
+    this.ctx.stroke();
+    this.ctx.setLineDash([]);
+    this.ctx.restore();
+
+    // Draw each cone along the field
+    dState.cones.forEach((cone, idx) => {
+      const sx = cone.worldX - cameraX;
+      const sy = cone.y;
+      if (sx < -60 || sx > this.width + 60) return;
+
+      const isCompleted = idx <= dState.currentTouch;
+      const isNextTarget = idx === dState.currentTouch + 1;
+
+      this.ctx.save();
+      this.ctx.translate(sx, sy);
+
+      // Pulsing target ring under next target cone
+      if (isNextTarget) {
+        const pulse = 24 + Math.sin(this.tick * 0.16) * 4;
+        this.ctx.strokeStyle = '#00f0ff';
+        this.ctx.lineWidth = 2.5;
+        this.ctx.beginPath();
+        this.ctx.ellipse(0, 4, pulse, pulse * 0.45, 0, 0, Math.PI * 2);
+        this.ctx.stroke();
+      } else if (isCompleted) {
+        this.ctx.fillStyle = 'rgba(0, 255, 102, 0.22)';
+        this.ctx.beginPath();
+        this.ctx.ellipse(0, 4, 20, 9, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+
+      // Cone Base Shadow
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      this.ctx.beginPath();
+      this.ctx.ellipse(0, 6, 15, 6, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Square plastic cone base
+      this.ctx.fillStyle = isCompleted ? '#10b981' : '#ea580c';
+      this.ctx.strokeStyle = '#0f172a';
+      this.ctx.lineWidth = 1.2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(-14, 4);
+      this.ctx.lineTo(0, 9);
+      this.ctx.lineTo(14, 4);
+      this.ctx.lineTo(0, -1);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+
+      // Cone body
+      this.ctx.fillStyle = isCompleted ? '#22c55e' : '#f97316';
+      this.ctx.beginPath();
+      this.ctx.moveTo(-10, 4);
+      this.ctx.lineTo(-2.5, -18);
+      this.ctx.lineTo(2.5, -18);
+      this.ctx.lineTo(10, 4);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+
+      // White reflective stripe on cone
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.beginPath();
+      this.ctx.moveTo(-6.5, -4);
+      this.ctx.lineTo(-4.2, -11);
+      this.ctx.lineTo(4.2, -11);
+      this.ctx.lineTo(6.5, -4);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      this.ctx.restore();
+    });
+  }
+
+  drawDribbleWordPlate(gameState) {
+    const dState = gameState.dribbleState;
+    if (!dState || !dState.word) return;
+
+    const word = dState.word;
+    const typedLen = dState.typedIndex || 0;
+    const mistypeFlash = dState.mistypeFlash || 0;
+
+    // Horizontal shake when mistyped
+    const shakeX = mistypeFlash > 0 ? Math.sin(this.tick * 1.3) * 10 * mistypeFlash : 0;
+
+    this.ctx.save();
+    this.ctx.translate(this.width * 0.5 + shakeX, this.height * 0.41);
+
+    // Top Instruction / Touch Counter Pill
+    const pillW = 280;
+    const pillH = 24;
+    const pillY = -48;
+    const isError = mistypeFlash > 0.05;
+
+    this.ctx.fillStyle = isError ? 'rgba(255, 0, 85, 0.92)' : 'rgba(15, 23, 42, 0.9)';
+    this.ctx.strokeStyle = isError ? '#ffeb3b' : '#00f0ff';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.beginPath();
+    this.ctx.roundRect(-pillW / 2, pillY, pillW, pillH, 12);
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    this.ctx.font = 'bold 11.5px "Segoe UI", sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillStyle = '#ffffff';
+    if (isError) {
+      this.ctx.fillText('⚠ MISTYPE! RETYPE WORD FROM START ⚠', 0, pillY + pillH / 2);
+    } else {
+      this.ctx.fillText(`⚽ DRIBBLE TOUCH ${dState.currentTouch + 1} OF ${dState.totalTouches} • TYPE TO KICK`, 0, pillY + pillH / 2);
+    }
+
+    // Keycap Word Plate
+    const keyTileWidth = 28;
+    const keyTileGap = 5;
+    const totalTilesW = word.length * keyTileWidth + (word.length - 1) * keyTileGap;
+    const boxWidth = Math.max(totalTilesW + 32, 160);
+    const boxHeight = 52;
+    const boxY = -16;
+
+    this.ctx.shadowColor = isError ? '#ff0055' : '#00f0ff';
+    this.ctx.shadowBlur = 18;
+    this.ctx.fillStyle = isError ? 'rgba(55, 8, 22, 0.96)' : 'rgba(6, 22, 46, 0.95)';
+    this.ctx.strokeStyle = isError ? '#ff0055' : '#00f0ff';
+    this.ctx.lineWidth = 3;
+
+    this.ctx.beginPath();
+    this.ctx.roundRect(-boxWidth / 2, boxY, boxWidth, boxHeight, 12);
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.shadowBlur = 0;
+
+    // Individual Keycap Tiles
+    let startX = -totalTilesW / 2;
+    this.ctx.font = 'bold 22px "Consolas", "Segoe UI", monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i];
+      const isTyped = i < typedLen;
+      const isNextChar = i === typedLen;
+      const kx = startX + i * (keyTileWidth + keyTileGap);
+      const ky = boxY + 7 + (isTyped ? -2 : 0);
+      const kh = boxHeight - 14;
+
+      if (isError) {
+        this.ctx.fillStyle = 'rgba(255, 0, 85, 0.28)';
+        this.ctx.strokeStyle = '#ff0055';
+        this.ctx.lineWidth = 1.8;
+      } else if (isTyped) {
+        this.ctx.fillStyle = 'rgba(57, 255, 20, 0.25)';
+        this.ctx.strokeStyle = '#39ff14';
+        this.ctx.lineWidth = 2;
+      } else if (isNextChar) {
+        this.ctx.fillStyle = 'rgba(0, 240, 255, 0.28)';
+        this.ctx.strokeStyle = '#00f0ff';
+        this.ctx.lineWidth = 2;
+      } else {
+        this.ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+        this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+        this.ctx.lineWidth = 1.2;
+      }
+
+      this.ctx.beginPath();
+      this.ctx.roundRect(kx, ky, keyTileWidth, kh, 6);
+      this.ctx.fill();
+      this.ctx.stroke();
+
+      this.ctx.fillStyle = isError ? '#fecdd3' : (isTyped ? '#39ff14' : (isNextChar ? '#ffeb3b' : '#ffffff'));
+      this.ctx.fillText(char, kx + keyTileWidth / 2, ky + kh / 2 + 1);
+    }
+
+    this.ctx.restore();
   }
 
   drawBanner(banner) {

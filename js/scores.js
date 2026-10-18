@@ -6,10 +6,12 @@ export const TROPHIES = [
   {
     id: 'rookie_cup',
     title: 'Rookie Trophy',
-    subtitle: 'Score 1,000+ pts in Rookie Practice',
+    subtitle: 'Score 800+ pts in Rookie or Amateur Practice',
     icon: '🥉',
     category: 'difficulty',
-    check: (scores) => (scores.shootingPractice?.rookie?.highScore || 0) >= 1000,
+    check: (scores) =>
+      (scores.shootingPractice?.rookie?.highScore || 0) >= 800 ||
+      (scores.shootingPractice?.amateur?.highScore || 0) >= 800,
   },
   {
     id: 'silver_boot',
@@ -36,9 +38,25 @@ export const TROPHIES = [
     check: (scores) => (scores.shootingPractice?.worldClass?.highScore || 0) >= 8000,
   },
   {
+    id: 'dribble_finisher',
+    title: 'Slalom Dribbler',
+    subtitle: 'Dribble all the way across the field in Dribbling Drill',
+    icon: '🏃',
+    category: 'dribble',
+    check: (_, lastMatch) => lastMatch?.mode === 'dribblingDrill' && (lastMatch?.elapsedTime || 0) > 0,
+  },
+  {
+    id: 'dribble_sprinter',
+    title: 'Breakaway Sprinter',
+    subtitle: 'Cross the field in under 25.0s in Dribbling Drill',
+    icon: '⏱️',
+    category: 'dribble',
+    check: (_, lastMatch) => lastMatch?.mode === 'dribblingDrill' && (lastMatch?.elapsedTime || 999) < 25.0,
+  },
+  {
     id: 'corner_specialist',
     title: 'Top Bins Sniper',
-    subtitle: 'Score 5+ corner goals in one match',
+    subtitle: 'Score 5+ corner goals in one shootout',
     icon: '🎯',
     category: 'skill',
     check: (_, lastMatch) => (lastMatch?.cornerGoals || 0) >= 5,
@@ -54,7 +72,7 @@ export const TROPHIES = [
   {
     id: 'speed_demon',
     title: 'Speed Demon Cleats',
-    subtitle: 'Exceed 55 WPM in a match',
+    subtitle: 'Exceed 55 WPM in any match or drill',
     icon: '⚡',
     category: 'speed',
     check: (_, lastMatch) => (lastMatch?.wpm || 0) >= 55,
@@ -62,10 +80,10 @@ export const TROPHIES = [
   {
     id: 'perfect_accuracy',
     title: 'Flawless Touch',
-    subtitle: 'Finish a match with 100% typing accuracy',
+    subtitle: 'Finish any match or drill with 100% typing accuracy',
     icon: '💯',
     category: 'accuracy',
-    check: (_, lastMatch) => (lastMatch?.accuracy || 0) >= 100 && (lastMatch?.shots || 0) >= 5,
+    check: (_, lastMatch) => (lastMatch?.accuracy || 0) >= 100 && ((lastMatch?.shots || 0) >= 5 || (lastMatch?.touches || 0) >= 8),
   },
   {
     id: 'streak_master',
@@ -78,48 +96,76 @@ export const TROPHIES = [
   {
     id: 'grand_slam',
     title: 'Grand Slam Champion',
-    subtitle: 'Set a high score across all 4 practice tiers',
+    subtitle: 'Set a record across all 5 difficulty tiers',
     icon: '👑',
     category: 'mastery',
     check: (scores) => {
       const sp = scores.shootingPractice || {};
-      return (sp.rookie?.highScore > 0) &&
-             (sp.semiPro?.highScore > 0) &&
-             (sp.pro?.highScore > 0) &&
-             (sp.worldClass?.highScore > 0);
+      const dd = scores.dribblingDrill || {};
+      const tiers = ['rookie', 'amateur', 'semiPro', 'pro', 'worldClass'];
+      return tiers.every(t => (sp[t]?.highScore > 0) || (dd[t]?.bestTime > 0));
     }
   }
 ];
+
+const DIFFICULTY_KEYS = ['rookie', 'amateur', 'semiPro', 'pro', 'worldClass'];
 
 class ScoreManager {
   constructor() {
     this.data = this.load();
   }
 
+  createDefaultModeRecords() {
+    const obj = {};
+    DIFFICULTY_KEYS.forEach(k => {
+      obj[k] = {
+        highScore: 0,
+        bestTime: null,
+        highWpm: 0,
+        bestAccuracy: 0,
+        bestStreak: 0,
+        goals: 0,
+        shots: 0,
+        date: null
+      };
+    });
+    return obj;
+  }
+
   load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        // Ensure all modes & 5 difficulties exist
+        ['shootingPractice', 'dribblingDrill', 'fullSoccerGame'].forEach(mode => {
+          if (!parsed[mode]) parsed[mode] = this.createDefaultModeRecords();
+          DIFFICULTY_KEYS.forEach(diff => {
+            if (!parsed[mode][diff]) {
+              parsed[mode][diff] = {
+                highScore: 0,
+                bestTime: null,
+                highWpm: 0,
+                bestAccuracy: 0,
+                bestStreak: 0,
+                goals: 0,
+                shots: 0,
+                date: null
+              };
+            }
+          });
+        });
+        return parsed;
       }
     } catch (e) {
       console.warn('Failed to parse saved scores:', e);
     }
 
     return {
-      version: 1,
-      shootingPractice: {
-        rookie: { highScore: 0, highWpm: 0, bestAccuracy: 0, bestStreak: 0, goals: 0, shots: 0, date: null },
-        semiPro: { highScore: 0, highWpm: 0, bestAccuracy: 0, bestStreak: 0, goals: 0, shots: 0, date: null },
-        pro: { highScore: 0, highWpm: 0, bestAccuracy: 0, bestStreak: 0, goals: 0, shots: 0, date: null },
-        worldClass: { highScore: 0, highWpm: 0, bestAccuracy: 0, bestStreak: 0, goals: 0, shots: 0, date: null },
-      },
-      fullSoccerGame: {
-        rookie: { highScore: 0, highWpm: 0, bestAccuracy: 0, bestStreak: 0, date: null },
-        semiPro: { highScore: 0, highWpm: 0, bestAccuracy: 0, bestStreak: 0, date: null },
-        pro: { highScore: 0, highWpm: 0, bestAccuracy: 0, bestStreak: 0, date: null },
-        worldClass: { highScore: 0, highWpm: 0, bestAccuracy: 0, bestStreak: 0, date: null },
-      },
+      version: 2,
+      shootingPractice: this.createDefaultModeRecords(),
+      dribblingDrill: this.createDefaultModeRecords(),
+      fullSoccerGame: this.createDefaultModeRecords(),
       unlockedTrophies: {},
       totalGoalsAllTime: 0,
       matchesPlayed: 0
@@ -135,10 +181,11 @@ class ScoreManager {
   }
 
   getRecord(mode, difficulty) {
-    if (!this.data[mode]) this.data[mode] = {};
+    if (!this.data[mode]) this.data[mode] = this.createDefaultModeRecords();
     if (!this.data[mode][difficulty]) {
       this.data[mode][difficulty] = {
         highScore: 0,
+        bestTime: null,
         highWpm: 0,
         bestAccuracy: 0,
         bestStreak: 0,
@@ -152,19 +199,32 @@ class ScoreManager {
 
   recordMatch(mode, difficulty, matchStats) {
     const record = this.getRecord(mode, difficulty);
-    const isNewHighScore = matchStats.score > record.highScore;
-    
-    if (isNewHighScore) {
-      record.highScore = matchStats.score;
-      record.date = new Date().toLocaleDateString();
+    let isNewHighScore = false;
+    let previousHighScore = record.highScore;
+
+    if (mode === 'dribblingDrill') {
+      const elapsed = matchStats.elapsedTime;
+      previousHighScore = record.bestTime;
+      if (elapsed > 0 && (!record.bestTime || elapsed < record.bestTime)) {
+        isNewHighScore = true;
+        record.bestTime = elapsed;
+        record.date = new Date().toLocaleDateString();
+      }
+    } else {
+      isNewHighScore = matchStats.score > (record.highScore || 0);
+      if (isNewHighScore) {
+        record.highScore = matchStats.score;
+        record.date = new Date().toLocaleDateString();
+      }
     }
+
     if (matchStats.wpm > (record.highWpm || 0)) {
       record.highWpm = matchStats.wpm;
     }
     if (matchStats.accuracy > (record.bestAccuracy || 0)) {
       record.bestAccuracy = matchStats.accuracy;
     }
-    if (matchStats.bestStreak > (record.bestStreak || 0)) {
+    if ((matchStats.bestStreak || 0) > (record.bestStreak || 0)) {
       record.bestStreak = matchStats.bestStreak;
     }
     record.goals = (record.goals || 0) + (matchStats.goals || 0);
@@ -175,10 +235,11 @@ class ScoreManager {
 
     // Check newly unlocked trophies
     const newlyUnlocked = [];
+    const enrichedStats = { ...matchStats, mode, difficulty };
     TROPHIES.forEach(t => {
       if (!this.data.unlockedTrophies[t.id]) {
         try {
-          if (t.check(this.data, matchStats)) {
+          if (t.check(this.data, enrichedStats)) {
             this.data.unlockedTrophies[t.id] = {
               unlockedAt: new Date().toLocaleDateString(),
               mode,
@@ -196,7 +257,7 @@ class ScoreManager {
 
     return {
       isNewHighScore,
-      previousHighScore: record.highScore,
+      previousHighScore,
       newlyUnlocked
     };
   }

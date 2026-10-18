@@ -101,6 +101,23 @@ export const SVG_ASSETS = {
     </svg>
   `,
 
+  modeDribbling: `
+    <svg viewBox="0 0 80 80" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+      <!-- Turf Strip -->
+      <rect x="6" y="16" width="68" height="48" rx="6" fill="#15803d" stroke="#4ade80" stroke-width="2"/>
+      <line x1="28" y1="16" x2="28" y2="64" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <line x1="52" y1="16" x2="52" y2="64" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <!-- Slalom Dribble Path -->
+      <path d="M 14 52 Q 26 20 40 42 T 66 28" fill="none" stroke="#00f0ff" stroke-width="3" stroke-dasharray="4,3" stroke-linecap="round"/>
+      <!-- Training Cones -->
+      <polygon points="28,26 22,40 34,40" fill="#f97316" stroke="#fff" stroke-width="1.2"/>
+      <polygon points="48,40 42,54 54,54" fill="#f97316" stroke="#fff" stroke-width="1.2"/>
+      <!-- Dribbling Ball -->
+      <circle cx="64" cy="28" r="8.5" fill="#ffffff" stroke="#0f172a" stroke-width="1.8"/>
+      <polygon points="64,24 67,26.5 66,30.5 62,30.5 61,26.5" fill="#0f172a"/>
+    </svg>
+  `,
+
   modeFullGame: `
     <svg viewBox="0 0 80 80" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
       <!-- Pitch -->
@@ -117,8 +134,24 @@ export const SVG_ASSETS = {
     </svg>
   `,
 
-  // Difficulty Tier Badges
+  // Difficulty Tier Badges (5 Tiers)
   diffRookie: `
+    <svg viewBox="0 0 64 64" width="54" height="54" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="emeraldGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#86efac"/>
+          <stop offset="50%" stop-color="#22c55e"/>
+          <stop offset="100%" stop-color="#14532d"/>
+        </linearGradient>
+      </defs>
+      <path d="M 32 6 L 54 16 C 54 38 46 50 32 58 C 18 50 10 38 10 16 Z" fill="url(#emeraldGrad)" stroke="#dcfce7" stroke-width="2"/>
+      <path d="M 32 12 L 48 20 C 48 36 42 45 32 52 C 22 45 16 36 16 20 Z" fill="#052e16" opacity="0.4"/>
+      <circle cx="32" cy="32" r="10" fill="#ffffff" stroke="#14532d" stroke-width="1.5"/>
+      <polygon points="32,27 36,30 34.5,35 29.5,35 28,30" fill="#14532d"/>
+    </svg>
+  `,
+
+  diffAmateur: `
     <svg viewBox="0 0 64 64" width="54" height="54" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="bronzeGrad" x1="0" y1="0" x2="1" y2="1">
@@ -356,6 +389,27 @@ export const SVG_ASSETS = {
         <circle cx="22" cy="49.5" r="2" fill="#00ff66"/>
         <circle cx="32" cy="49.5" r="2.5" fill="#ff0055"/>
         <circle cx="42" cy="49.5" r="2" fill="#00ff66"/>
+      </svg>
+    `,
+    dribble_finisher: `
+      <svg viewBox="0 0 64 64" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
+        <!-- Slalom Cone & Ball Trophy -->
+        <ellipse cx="32" cy="52" rx="22" ry="6" fill="#0f172a" stroke="#f97316" stroke-width="1.5"/>
+        <polygon points="24,14 14,48 34,48" fill="#f97316" stroke="#ffffff" stroke-width="1.5"/>
+        <path d="M 19 31 L 29 31 L 31 38 L 17 38 Z" fill="#ffffff"/>
+        <circle cx="43" cy="40" r="11" fill="#ffffff" stroke="#0f172a" stroke-width="1.8"/>
+        <polygon points="43,35 47,38 45.5,43 40.5,43 39,38" fill="#0f172a"/>
+      </svg>
+    `,
+    dribble_sprinter: `
+      <svg viewBox="0 0 64 64" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
+        <!-- Golden Stopwatch Trophy -->
+        <rect x="27" y="6" width="10" height="5" rx="2" fill="#facc15"/>
+        <circle cx="32" cy="35" r="22" fill="#0f172a" stroke="#00f0ff" stroke-width="3"/>
+        <circle cx="32" cy="35" r="17" fill="none" stroke="#facc15" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <line x1="32" y1="35" x2="32" y2="22" stroke="#00ff66" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="32" y1="35" x2="43" y2="39" stroke="#ff0055" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="32" cy="35" r="3" fill="#ffffff"/>
       </svg>
     `
   },
