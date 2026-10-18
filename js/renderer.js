@@ -2056,6 +2056,9 @@ export class StadiumRenderer {
       this.ctx.fillText(char, kx + keyTileWidth / 2, ky + kh / 2 + 1);
     }
 
+    this.ctx.restore();
+  }
+
   // =========================================================================
   // TOUCH PRACTICE ARENA & CHARACTER SPRITE
   // =========================================================================
