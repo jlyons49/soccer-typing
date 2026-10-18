@@ -86,6 +86,7 @@ class SoccerTypingGame {
       hudStreak: document.getElementById('hud-streak'),
       hudWpm: document.getElementById('hud-wpm'),
       hudAccuracy: document.getElementById('hud-accuracy'),
+      leadUpTimerContainer: document.querySelector('.leadup-timer-container'),
       leadUpTimerTitle: document.getElementById('leadup-timer-title'),
       leadUpTimerBar: document.getElementById('leadup-timer-bar'),
       leadUpTimerText: document.getElementById('leadup-timer-text'),
@@ -669,12 +670,12 @@ class SoccerTypingGame {
       sound.playKeypress(pitchMod);
       sound.playKick();
 
-      const footX = kickedFoot === 'LEFT' ? 575 : 625;
-      this.renderer.spawnGrassKick(footX, 575, 10);
-      this.renderer.spawnTargetKeySpark(600, 310, '#39ff14');
+      const footX = kickedFoot === 'LEFT' ? 558 : 642;
+      this.renderer.spawnGrassKick(footX, 584, 10);
+      this.renderer.spawnTargetKeySpark(600, 172, '#39ff14');
 
       if (tState.touches % 10 === 0) {
-        this.renderer.addFloatingText(`${tState.touches} TOUCHES!`, 600, 250, '#ffeb3b', 28);
+        this.renderer.addFloatingText(`${tState.touches} TOUCHES!`, 600, 310, '#ffeb3b', 28);
       }
 
       // Next target letter
@@ -777,6 +778,7 @@ class SoccerTypingGame {
     } else if (this.mode === 'dribblingDrill') {
       this.startDribblingDrill();
     } else {
+      if (this.dom.leadUpTimerContainer) this.dom.leadUpTimerContainer.style.display = '';
       if (this.dom.hudScoreLabel) this.dom.hudScoreLabel.textContent = 'Score';
       if (this.dom.hudGoalsLabel) this.dom.hudGoalsLabel.textContent = 'Goals';
       if (this.dom.leadUpTimerTitle) this.dom.leadUpTimerTitle.textContent = '🏃 STRIKER APPROACH RUN';
@@ -808,21 +810,18 @@ class SoccerTypingGame {
     this.banner = null;
     this.isGoalScored = false;
 
-    // Striker at pitch center & Ball at initial left foot
-    this.striker = { x: 600, y: 530, kickFrame: 0 };
-    this.ball = { x: 575, y: 575, scale: 1.0, rotation: 0 };
+    // Front-facing striker in training box & Ball at initial left foot pad
+    this.striker = { x: 600, y: 445, kickFrame: 0 };
+    this.ball = { x: 558, y: 584, scale: 1.32, rotation: 0 };
 
-    // Configure HUD for Touch Practice
+    // Configure HUD for Touch Practice (hide top progress bar; use canvas side stopwatch)
+    if (this.dom.leadUpTimerContainer) this.dom.leadUpTimerContainer.style.display = 'none';
     if (this.dom.hudScoreLabel) this.dom.hudScoreLabel.textContent = 'Touches';
     this.dom.hudScore.textContent = '0';
     this.dom.hudShotNumber.textContent = this.touchState.suddenDeath ? '💀 SUDDEN DEATH' : 'TOUCH DRILL';
     if (this.dom.hudGoalsLabel) this.dom.hudGoalsLabel.textContent = 'Misses';
     this.dom.hudGoals.textContent = '0';
     this.dom.hudStreak.textContent = '0';
-    if (this.dom.leadUpTimerTitle) this.dom.leadUpTimerTitle.textContent = '⏱ 60-SECOND DRILL CLOCK';
-    this.dom.leadUpTimerBar.style.width = '100%';
-    this.dom.leadUpTimerBar.style.backgroundColor = this.touchState.suddenDeath ? '#f59e0b' : '#00f0ff';
-    this.dom.leadUpTimerText.textContent = `${duration.toFixed(1)}s`;
 
     this.updateHudMetrics();
     sound.playWhistle(true);
@@ -874,6 +873,7 @@ class SoccerTypingGame {
     this.ball = { x: 360, y: cones[0].y, scale: 1.0, rotation: 0 };
 
     // Configure HUD for Dribbling Drill
+    if (this.dom.leadUpTimerContainer) this.dom.leadUpTimerContainer.style.display = '';
     if (this.dom.hudScoreLabel) this.dom.hudScoreLabel.textContent = 'Time';
     this.dom.hudScore.textContent = '0.00s';
     this.dom.hudShotNumber.textContent = `TOUCH 1 / ${totalTouches}`;
@@ -1362,6 +1362,9 @@ class SoccerTypingGame {
       targets: this.targets,
       activeTargetIndex: this.activeTargetIndex,
       leadUpRatio: this.timeRemaining / this.timeTotal,
+      timeRemaining: this.timeRemaining,
+      timeTotal: this.timeTotal,
+      streak: this.streak,
       striker: this.striker,
       keeper: this.keeper,
       ball: this.ball,
@@ -1501,17 +1504,9 @@ class SoccerTypingGame {
     const tState = this.touchState;
     if (!tState) return;
 
-    // 1. Countdown timer in TYPING phase
+    // 1. Countdown timer in TYPING phase (rendered via side stopwatch in renderer.js)
     if (this.phase === 'TYPING') {
       this.timeRemaining -= dt;
-
-      const pct = Math.max(0, (this.timeRemaining / this.timeTotal) * 100);
-      this.dom.leadUpTimerBar.style.width = `${pct}%`;
-      this.dom.leadUpTimerText.textContent = `${Math.max(0, this.timeRemaining).toFixed(1)}s`;
-
-      if (this.timeRemaining < 10.0) {
-        this.dom.leadUpTimerBar.style.backgroundColor = '#ff0055';
-      }
 
       if (this.timeRemaining <= 0) {
         this.timeRemaining = 0;
@@ -1540,18 +1535,18 @@ class SoccerTypingGame {
       tState.mistypeFlash = Math.max(0, tState.mistypeFlash - dt * 2.8);
     }
 
-    // 3. Ball position interpolation between feet
+    // 3. Ball position interpolation between front-facing left & right feet pads
     if (tState.kickAnim > 0 && tState.lastKickedFoot) {
       const p = 1.0 - tState.kickAnim;
-      const startX = tState.lastKickedFoot === 'LEFT' ? 575 : 625;
-      const endX = tState.lastKickedFoot === 'LEFT' ? 625 : 575;
+      const startX = tState.lastKickedFoot === 'LEFT' ? 558 : 642;
+      const endX = tState.lastKickedFoot === 'LEFT' ? 642 : 558;
       this.ball.x = startX + (endX - startX) * p;
-      this.ball.y = 575 - Math.sin(p * Math.PI) * 24;
+      this.ball.y = 584 - Math.sin(p * Math.PI) * 20;
       this.ball.rotation += (tState.lastKickedFoot === 'LEFT' ? 1 : -1) * dt * 22;
     } else {
-      const targetX = tState.currentFoot === 'LEFT' ? 575 : 625;
+      const targetX = tState.currentFoot === 'LEFT' ? 558 : 642;
       this.ball.x += (targetX - this.ball.x) * Math.min(1, dt * 12);
-      this.ball.y = 575 + Math.sin(this.renderer.tick * 0.14) * 2;
+      this.ball.y = 584 + Math.sin(this.renderer.tick * 0.14) * 2;
     }
   }
 }
